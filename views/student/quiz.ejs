@@ -1,0 +1,46 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+  <div>
+    <a href="/student/modules/<%= moduleId %>" class="text-gray-400 hover:text-gray-600 text-sm">← Back to Module</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">AI Quiz</h1>
+    <p class="text-sm text-gray-500">Topic: <strong><%= topicName %></strong> · <%= questions.length %> questions</p>
+  </div>
+
+  <form method="POST" action="/student/submit-quiz">
+    <input type="hidden" name="questions_json" value="<%= JSON.stringify(questions) %>" />
+    <input type="hidden" name="pdf_note_id" value="<%= pdfNoteId %>" />
+    <input type="hidden" name="module_id" value="<%= moduleId %>" />
+    <input type="hidden" name="topic_name" value="<%= topicName %>" />
+
+    <div class="space-y-4">
+      <% questions.forEach((q, idx) => { %>
+      <div class="card">
+        <p class="text-sm font-semibold text-gray-800 mb-3">
+          <span class="text-primary-600 mr-1"><%= idx + 1 %>.</span> <%= q.question %>
+        </p>
+        <div class="space-y-2">
+          <% ['A','B','C','D'].forEach(letter => { %>
+          <% const optKey = 'option_' + letter; %>
+          <% if (q[optKey]) { %>
+          <label class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 cursor-pointer transition-colors">
+            <input type="radio" name="answer_<%= idx %>" value="<%= letter %>" required
+                   class="text-primary-600 focus:ring-primary-500" />
+            <span class="text-sm text-gray-700"><strong class="text-primary-600 mr-1"><%= letter %>.</strong> <%= q[optKey] %></span>
+          </label>
+          <% } %>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+
+    <div class="flex justify-end mt-6">
+      <button type="submit" class="btn-primary px-8">Submit Quiz</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,80 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+    <p class="text-gray-500 text-sm mt-1">System overview</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">👨‍🏫</div>
+      <div>
+        <p class="text-2xl font-bold text-gray-800"><%= roleCounts.lecturer %></p>
+        <p class="text-sm text-gray-500">Lecturers</p>
+      </div>
+    </div>
+    <div class="card flex items-center gap-4">
+      <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">🎓</div>
+      <div>
+        <p class="text-2xl font-bold text-gray-800"><%= roleCounts.mentor %></p>
+        <p class="text-sm text-gray-500">Mentors</p>
+      </div>
+    </div>
+    <div class="card flex items-center gap-4">
+      <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">👩‍🎓</div>
+      <div>
+        <p class="text-2xl font-bold text-gray-800"><%= roleCounts.student %></p>
+        <p class="text-sm text-gray-500">Students</p>
+      </div>
+    </div>
+    <div class="card flex items-center gap-4">
+      <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">📚</div>
+      <div>
+        <p class="text-2xl font-bold text-gray-800"><%= moduleCount %></p>
+        <p class="text-sm text-gray-500">Modules</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="card flex items-center gap-4">
+      <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-2xl">📋</div>
+      <div>
+        <p class="text-2xl font-bold text-gray-800"><%= enrollmentCount %></p>
+        <p class="text-sm text-gray-500">Total Enrollments</p>
+      </div>
+    </div>
+    <div class="card flex items-center gap-4">
+      <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center text-2xl">🧠</div>
+      <div>
+        <p class="text-2xl font-bold text-gray-800"><%= quizCount %></p>
+        <p class="text-sm text-gray-500">AI Quiz Attempts</p>
+      </div>
+    </div>
+    <div class="card flex items-center gap-4">
+      <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl">👤</div>
+      <div>
+        <p class="text-2xl font-bold text-gray-800"><%= roleCounts.admin %></p>
+        <p class="text-sm text-gray-500">Admins</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Quick Actions</h2>
+    <div class="flex flex-wrap gap-3">
+      <a href="/admin/users" class="btn-primary">Manage Users</a>
+      <a href="/admin/modules" class="btn-secondary">Manage Modules</a>
+      <a href="/admin/enrollments" class="btn-secondary">Enrollments</a>
+      <a href="/admin/analytics" class="btn-secondary">Analytics</a>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

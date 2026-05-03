@@ -1,0 +1,44 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">My Modules</h1>
+
+  <% if (modules.length === 0) { %>
+    <div class="card text-center py-12">
+      <p class="text-4xl mb-3">📚</p>
+      <p class="text-gray-500">You have not been assigned to any modules yet.</p>
+      <p class="text-sm text-gray-400 mt-1">Contact an administrator to get assigned.</p>
+    </div>
+  <% } else { %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% modules.forEach(m => { %>
+      <a href="/lecturer/modules/<%= m.id %>" class="card hover:shadow-md transition-shadow group">
+        <div class="flex items-start gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl flex-shrink-0" style="background-color: <%= m.colour %>20">
+            <div class="w-full h-full rounded-xl flex items-center justify-center font-bold text-sm" style="color: <%= m.colour %>">
+              <%= m.module_code.substring(0,2) %>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-800 group-hover:text-primary-700 transition-colors truncate"><%= m.module_name %></p>
+            <p class="text-xs text-gray-400"><%= m.module_code %></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 text-xs text-gray-500">
+          <span>👩‍🎓 <%= m.student_count %> students</span>
+          <span>📄 <%= m.pdf_count %> notes</span>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <span class="text-xs text-primary-600 font-medium group-hover:underline">View module →</span>
+          <a href="/lecturer/analytics/<%= m.id %>" onclick="event.stopPropagation()"
+             class="text-xs text-gray-400 hover:text-gray-600">Analytics</a>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

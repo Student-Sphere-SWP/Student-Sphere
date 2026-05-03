@@ -1,0 +1,130 @@
+<%
+// Determine sidebar links based on role
+const role = user ? user.role : null;
+const links = {
+  admin: [
+    { href: '/admin/dashboard',   icon: '🏠', label: 'Dashboard' },
+    { href: '/admin/users',       icon: '👥', label: 'Users' },
+    { href: '/admin/modules',     icon: '📚', label: 'Modules' },
+    { href: '/admin/enrollments', icon: '📋', label: 'Enrollments' },
+    { href: '/admin/analytics',   icon: '📊', label: 'Analytics' },
+    { href: '/admin/profile',     icon: '👤', label: 'My Profile' }
+  ],
+  lecturer: [
+    { href: '/lecturer/dashboard',         icon: '🏠', label: 'Dashboard' },
+    { href: '/lecturer/announcements/create', icon: '📢', label: 'Post Announcement' },
+    { href: '/lecturer/create-quiz',       icon: '📝', label: 'Create Quiz' },
+    { href: '/lecturer/profile',           icon: '👤', label: 'My Profile' }
+  ],
+  student: [
+    { href: '/student/dashboard', icon: '🏠', label: 'Dashboard' },
+    { href: '/student/modules',   icon: '📚', label: 'Browse Modules' },
+    { href: '/student/progress',  icon: '📈', label: 'My Progress' },
+    { href: '/student/tutors',    icon: '🎓', label: 'Tutors' },
+    { href: '/student/sessions',  icon: '📅', label: 'Sessions' },
+    { href: '/student/profile',   icon: '👤', label: 'My Profile' }
+  ],
+  mentor: [
+    { href: '/mentor/dashboard', icon: '🏠', label: 'Dashboard' },
+    { href: '/mentor/sessions',  icon: '📅', label: 'My Sessions' },
+    { href: '/mentor/my-notes',  icon: '📄', label: 'My Notes' },
+    { href: '/mentor/profile',   icon: '👤', label: 'My Profile' }
+  ]
+};
+const roleLinks = role ? (links[role] || []) : [];
+const roleBadgeColor = {
+  admin: 'bg-red-100 text-red-700',
+  lecturer: 'bg-blue-100 text-blue-700',
+  student: 'bg-green-100 text-green-700',
+  mentor: 'bg-purple-100 text-purple-700'
+};
+%>
+
+<div class="flex h-screen overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 flex-shrink-0">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-6 h-16 border-b border-gray-100">
+      <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">S²</div>
+      <span class="font-bold text-gray-800 text-lg">Student Sphere</span>
+    </div>
+
+    <!-- Nav links -->
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+      <% roleLinks.forEach(link => { %>
+        <a href="<%= link.href %>"
+           class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-colors">
+          <span class="text-base"><%= link.icon %></span>
+          <span><%= link.label %></span>
+        </a>
+      <% }) %>
+    </nav>
+
+    <!-- User section -->
+    <% if (user) { %>
+    <div class="border-t border-gray-100 p-4">
+      <div class="flex items-center gap-3 mb-3">
+        <% if (user.profile_picture) { %>
+          <img src="<%= user.profile_picture %>" alt="<%= user.name %>" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary-100" />
+        <% } else { %>
+          <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm">
+            <%= user.name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-gray-800 truncate"><%= user.name %></p>
+          <span class="badge <%= roleBadgeColor[user.role] || 'bg-gray-100 text-gray-700' %>">
+            <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>
+          </span>
+        </div>
+      </div>
+      <a href="/logout" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+        Sign out
+      </a>
+    </div>
+    <% } %>
+  </aside>
+
+  <!-- Main content area -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Mobile top bar -->
+    <header class="lg:hidden flex items-center justify-between px-4 h-14 bg-white border-b border-gray-100">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">S²</div>
+        <span class="font-bold text-gray-800">Student Sphere</span>
+      </div>
+      <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-gray-100">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Mobile menu overlay -->
+    <div id="mobile-menu" class="lg:hidden hidden fixed inset-0 z-50">
+      <div class="absolute inset-0 bg-black bg-opacity-40" id="mobile-menu-overlay"></div>
+      <div class="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl flex flex-col">
+        <div class="flex items-center justify-between px-5 h-14 border-b border-gray-100">
+          <span class="font-bold text-gray-800">Menu</span>
+          <button id="mobile-menu-close" class="p-1 rounded hover:bg-gray-100">✕</button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+          <% roleLinks.forEach(link => { %>
+            <a href="<%= link.href %>" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary-700">
+              <span><%= link.icon %></span><span><%= link.label %></span>
+            </a>
+          <% }) %>
+        </nav>
+        <% if (user) { %>
+        <div class="border-t p-4">
+          <a href="/logout" class="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg">
+            Sign out
+          </a>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Page content -->
+    <main class="flex-1 overflow-y-auto p-6">

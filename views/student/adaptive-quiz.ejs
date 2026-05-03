@@ -1,0 +1,113 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div>
+    <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Back to Dashboard</a>
+    <div class="flex items-center gap-3 mt-2">
+      <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl">🧠</div>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Adaptive Quiz</h1>
+        <p class="text-sm text-gray-500">AI generates targeted questions based on your weak areas</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3">
+    <span class="text-indigo-400 text-xl flex-shrink-0 mt-0.5">💡</span>
+    <div class="text-sm text-indigo-800 space-y-1">
+      <p class="font-semibold">How Adaptive Quizzing Works</p>
+      <p>Select a topic you're struggling with. The AI analyses your previous scores and crafts questions at exactly the right difficulty level to help you improve — getting easier if you're really stuck, or harder as you approach mastery.</p>
+    </div>
+  </div>
+
+  <% if (!weakTopics.length) { %>
+  <!-- No weak topics -->
+  <div class="card text-center py-14">
+    <p class="text-5xl mb-4">🎉</p>
+    <h2 class="text-xl font-bold text-gray-800 mb-2">No Weak Topics Found</h2>
+    <p class="text-gray-500 text-sm max-w-sm mx-auto">
+      You haven't taken any quizzes yet, or you're scoring 70%+ on everything —
+      well done! Take some AI quizzes from your module notes to unlock adaptive practice.
+    </p>
+    <a href="/student/modules" class="btn-primary mt-6 inline-block">Browse Modules</a>
+  </div>
+  <% } else { %>
+
+  <!-- Weak topics list -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-1">Your Weak Topics</h2>
+    <p class="text-xs text-gray-400 mb-5">Showing topics where your average score is below 70%</p>
+
+    <div class="space-y-3 mb-6">
+      <% weakTopics.forEach(t => { %>
+      <%
+        const pct = parseFloat(t.avg_score);
+        const barColor = pct < 50 ? '#dc2626' : '#ca8a04';
+        const badge    = pct < 50 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700';
+        const label    = pct < 50 ? 'Needs Work' : 'Getting There';
+      %>
+      <label class="flex items-center gap-4 p-3.5 rounded-xl border border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 cursor-pointer transition-all group has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 has-[:checked]:ring-1 has-[:checked]:ring-emerald-400">
+        <input type="radio" name="selected_weak_topic" value="<%= t.id %>"
+               class="text-emerald-600 focus:ring-emerald-500 flex-shrink-0" />
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <p class="text-sm font-semibold text-gray-800 truncate"><%= t.topic_name %></p>
+            <span class="badge <%= badge %> flex-shrink-0"><%= label %></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex-1 bg-gray-100 rounded-full h-1.5">
+              <div class="h-1.5 rounded-full weak-bar" data-pct="<%= pct %>" data-color="<%= barColor %>"></div>
+            </div>
+            <span class="text-xs text-gray-500 flex-shrink-0"><%= pct %>% avg</span>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">
+            <span class="w-2 h-2 rounded-full inline-block mr-1 module-dot" data-colour="<%= t.colour %>"></span>
+            <%= t.module_name %> · <%= t.attempts %> attempt<%= t.attempts !== 1 ? 's' : '' %>
+          </p>
+        </div>
+      </label>
+      <% }) %>
+    </div>
+
+    <form method="POST" action="/student/adaptive-quiz/generate" id="adaptiveForm">
+      <input type="hidden" name="weak_topic_id" id="weakTopicInput" value="" />
+      <button type="submit" id="generateBtn"
+              class="w-full btn-primary py-3 text-base font-semibold opacity-50 cursor-not-allowed"
+              disabled>
+        🧠 Generate Adaptive Quiz
+      </button>
+    </form>
+  </div>
+
+  <% } %>
+</div>
+
+<script>
+  // Apply bar widths and module dot colours
+  document.querySelectorAll('.weak-bar').forEach(el => {
+    el.style.width = el.dataset.pct + '%';
+    el.style.backgroundColor = el.dataset.color;
+  });
+  document.querySelectorAll('.module-dot').forEach(el => {
+    el.style.backgroundColor = el.dataset.colour;
+  });
+
+  // Enable button when a radio is selected
+  const radios = document.querySelectorAll('input[name="selected_weak_topic"]');
+  const btn    = document.getElementById('generateBtn');
+  const input  = document.getElementById('weakTopicInput');
+  radios.forEach(r => {
+    r.addEventListener('change', () => {
+      input.value = r.value;
+      btn.disabled = false;
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

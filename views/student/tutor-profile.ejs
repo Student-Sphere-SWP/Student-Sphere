@@ -1,0 +1,181 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-4xl mx-auto space-y-6">
+  <% const myRating = (myRatings && myRatings.length) ? myRatings[0] : null; %>
+  <% const allRatings = ratings || []; %>
+  <a href="/student/tutors" class="text-gray-400 hover:text-gray-600 text-sm">← Back to Tutors</a>
+
+  <!-- Profile header -->
+  <div class="card flex flex-col sm:flex-row items-start gap-5">
+    <% if (tutor.profile_picture) { %>
+      <img src="<%= tutor.profile_picture %>" class="w-20 h-20 rounded-full object-cover flex-shrink-0" />
+    <% } else { %>
+      <div class="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center text-3xl font-bold text-purple-600 flex-shrink-0">
+        <%= tutor.name.charAt(0).toUpperCase() %>
+      </div>
+    <% } %>
+    <div>
+      <h1 class="text-xl font-bold text-gray-900"><%= tutor.name %></h1>
+      <span class="badge bg-purple-100 text-purple-700 mt-1">Mentor</span>
+      <% if (tutor.bio) { %><p class="text-sm text-gray-500 mt-2"><%= tutor.bio %></p><% } %>
+      <div class="flex flex-wrap gap-1 mt-2">
+        <% (modules || []).forEach(m => { %>
+          <span class="badge bg-gray-100 text-gray-600"><%= m.module_name %></span>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tutor Notes -->
+  <% if (notes.length) { %>
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Shared Notes</h2>
+    <div class="space-y-2">
+      <% notes.forEach(n => { %>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div>
+          <p class="text-sm font-medium text-gray-700"><%= n.topic_name %></p>
+          <p class="text-xs text-gray-400"><%= n.module_name %> · <%= n.file_name %></p>
+        </div>
+        <a href="<%= n.file_url %>" target="_blank" download class="text-xs text-blue-600 hover:underline">⬇ Download</a>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Upcoming Sessions -->
+  <% if (sessions.length) { %>
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Upcoming Sessions</h2>
+    <div class="space-y-3">
+      <% sessions.forEach(s => { %>
+      <%
+        const alreadyRsvpd = (myRsvpIds || []).includes(s.id);
+        const full = Number(s.rsvp_count || 0) >= Number(s.capacity || 0);
+      %>
+      <div class="flex flex-wrap items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
+        <div>
+          <p class="text-sm font-semibold text-gray-700"><%= s.topic %></p>
+          <p class="text-xs text-gray-400">
+            <%= new Date(s.date_time).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'}) %>
+            at <%= new Date(s.date_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) %>
+            <% if (s.meeting_link_or_location) { %> · 📍 <%= s.meeting_link_or_location %><% } %>
+          </p>
+          <p class="text-xs text-gray-400"><%= s.module_name %> · <%= s.rsvp_count %>/<%= s.capacity %> spots</p>
+        </div>
+        <% if (alreadyRsvpd) { %>
+          <span class="badge bg-green-100 text-green-700">✓ RSVP'd</span>
+        <% } else if (full) { %>
+          <span class="badge bg-gray-100 text-gray-500">Full</span>
+        <% } else { %>
+          <form method="POST" action="/student/sessions/<%= s.id %>/rsvp">
+            <button class="btn-primary text-xs">RSVP</button>
+          </form>
+        <% } %>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Ratings -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Reviews</h2>
+
+    <!-- Submit / Edit own rating -->
+    <div class="bg-gray-50 rounded-xl p-4 mb-5">
+      <% if (myRating) { %>
+        <p class="text-xs font-medium text-gray-500 mb-2">Your Review</p>
+        <form method="POST" action="/student/ratings/<%= myRating.id %>?_method=PUT" class="space-y-3">
+          <input type="hidden" name="tutor_id" value="<%= tutor.id %>" />
+          <div class="flex items-center gap-1" id="star-row-edit">
+            <% for (let i = 1; i <= 5; i++) { %>
+            <label>
+              <input type="radio" name="rating" value="<%= i %>" class="sr-only"
+                     <%= myRating.rating === i ? 'checked' : '' %> />
+              <span class="text-2xl cursor-pointer star-edit"><%= i <= myRating.rating ? '★' : '☆' %></span>
+            </label>
+            <% } %>
+          </div>
+          <textarea name="review" rows="2" class="form-input text-sm" placeholder="Your comment (optional)"><%= myRating.review || '' %></textarea>
+          <div class="flex gap-2">
+            <button type="submit" class="btn-primary text-xs">Update</button>
+            <a href="/student/ratings/<%= myRating.id %>?_method=DELETE"
+               onclick="event.preventDefault(); if(confirm('Delete your review?')) document.getElementById('delete-my-rating').submit();"
+               class="btn-danger text-xs">Delete</a>
+          </div>
+        </form>
+        <form id="delete-my-rating" method="POST" action="/student/ratings/<%= myRating.id %>?_method=DELETE" class="hidden"></form>
+      <% } else { %>
+        <p class="text-xs font-medium text-gray-500 mb-2">Leave a Review</p>
+        <form method="POST" action="/student/tutors/<%= tutor.id %>/rate" class="space-y-3">
+          <div class="flex items-center gap-1">
+            <% for (let i = 1; i <= 5; i++) { %>
+            <label>
+              <input type="radio" name="rating" value="<%= i %>" class="sr-only" required />
+              <span class="text-2xl cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors star-new">☆</span>
+            </label>
+            <% } %>
+          </div>
+          <textarea name="review" rows="2" class="form-input text-sm" placeholder="Your comment (optional)"></textarea>
+          <button type="submit" class="btn-primary text-xs">Submit Review</button>
+        </form>
+      <% } %>
+    </div>
+
+    <!-- All ratings -->
+    <% if (!allRatings.length) { %>
+      <p class="text-sm text-gray-400 text-center py-4">No reviews yet.</p>
+    <% } else { %>
+    <div class="space-y-3">
+      <% allRatings.forEach(r => { %>
+      <div class="flex gap-3 items-start">
+        <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 flex-shrink-0 mt-0.5">
+          <%= (r.student_name || 'S').charAt(0).toUpperCase() %>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-gray-700"><%= r.student_name || 'Student' %>
+            <span class="text-yellow-400 ml-2"><%= '★'.repeat(r.rating) %><%= '☆'.repeat(5 - r.rating) %></span>
+          </p>
+          <% if (r.review) { %><p class="text-sm text-gray-600 mt-0.5"><%= r.review %></p><% } %>
+          <p class="text-xs text-gray-300 mt-0.5"><%= new Date(r.created_at).toLocaleDateString() %></p>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  // Star rating interactive highlight
+  document.querySelectorAll('form').forEach(form => {
+    const labels = form.querySelectorAll('label:has(input[type="radio"][name="rating"])');
+    labels.forEach((label, idx) => {
+      const star = label.querySelector('span');
+      label.addEventListener('mouseenter', () => {
+        labels.forEach((l, i) => l.querySelector('span').textContent = i <= idx ? '★' : '☆');
+        labels.forEach((l, i) => l.querySelector('span').className = 'text-2xl cursor-pointer ' + (i <= idx ? 'text-yellow-400' : 'text-gray-300') + ' transition-colors ' + (l.querySelector('span').className.includes('star') ? l.querySelector('span').className.split(' ').filter(c => c.startsWith('star')).join(' ') : ''));
+      });
+      label.addEventListener('click', () => {
+        labels.forEach((l, i) => {
+          const s = l.querySelector('span');
+          s.textContent = i <= idx ? '★' : '☆';
+        });
+      });
+    });
+    const row = form.querySelector('label:has(input[name="rating"])');
+    if (row) {
+      form.addEventListener('mouseleave', () => {
+        const checked = form.querySelector('input[name="rating"]:checked');
+        const val = checked ? parseInt(checked.value) - 1 : -1;
+        labels.forEach((l, i) => l.querySelector('span').textContent = i <= val ? '★' : '☆');
+      });
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

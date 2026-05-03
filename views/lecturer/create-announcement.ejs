@@ -1,0 +1,49 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center gap-3">
+    <a href="/lecturer/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900">Post Announcement</h1>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="/lecturer/announcements/create" class="space-y-5">
+      <div>
+        <label class="form-label">Module</label>
+        <select name="module_id" required class="form-input">
+          <option value="">Select a module…</option>
+          <% modules.forEach(m => { %>
+            <option value="<%= m.id %>" <%= selected_module === m.id ? 'selected' : '' %>>
+              <%= m.module_code %> — <%= m.module_name %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label">Title</label>
+        <input type="text" name="title" required class="form-input" placeholder="Announcement title…" maxlength="255" />
+      </div>
+
+      <div>
+        <label class="form-label">Content</label>
+        <textarea name="content" required rows="6" class="form-input"
+                  placeholder="Write your announcement here…" minlength="5"></textarea>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="is_pinned" name="is_pinned" class="rounded text-primary-600" />
+        <label for="is_pinned" class="text-sm text-gray-700">📌 Pin this announcement</label>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <a href="/lecturer/dashboard" class="btn-secondary">Cancel</a>
+        <button type="submit" class="btn-primary">Post Announcement</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

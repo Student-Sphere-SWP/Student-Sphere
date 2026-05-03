@@ -1,0 +1,77 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="flex items-center gap-3">
+    <a href="/admin/users" class="text-gray-400 hover:text-gray-600">← Users</a>
+    <span class="text-gray-300">/</span>
+    <h1 class="text-2xl font-bold text-gray-900">Edit User</h1>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="/admin/users/<%= editUser.id %>?_method=PUT" enctype="multipart/form-data" class="space-y-5">
+
+      <!-- Avatar -->
+      <div class="flex items-center gap-4">
+        <div id="avatar-preview" class="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center">
+          <% if (editUser.profile_picture) { %>
+            <img src="<%= editUser.profile_picture %>" class="w-full h-full object-cover rounded-full" alt="" />
+          <% } else { %>
+            <span class="text-xl font-bold text-gray-400"><%= editUser.name.charAt(0).toUpperCase() %></span>
+          <% } %>
+        </div>
+        <input type="file" id="profile_picture" name="profile_picture" accept="image/*" class="hidden" />
+        <button type="button" onclick="document.getElementById('profile_picture').click()" class="btn-secondary text-xs">Change Photo</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Full name</label>
+          <input type="text" name="name" value="<%= editUser.name %>" required class="form-input" minlength="2" />
+        </div>
+        <div>
+          <label class="form-label">Email</label>
+          <input type="email" name="email" value="<%= editUser.email %>" required class="form-input" />
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label">Role</label>
+        <select name="role" required class="form-input">
+          <option value="student"  <%= editUser.role === 'student'  ? 'selected' : '' %>>Student</option>
+          <option value="lecturer" <%= editUser.role === 'lecturer' ? 'selected' : '' %>>Lecturer</option>
+          <option value="mentor"   <%= editUser.role === 'mentor'   ? 'selected' : '' %>>Mentor</option>
+          <option value="admin"    <%= editUser.role === 'admin'    ? 'selected' : '' %>>Admin</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label">Bio <span class="text-gray-400 font-normal">(optional)</span></label>
+        <textarea name="bio" rows="3" class="form-input"><%= editUser.bio || '' %></textarea>
+      </div>
+
+      <div>
+        <label class="form-label">New Password <span class="text-gray-400 font-normal">(leave blank to keep current)</span></label>
+        <input type="password" name="password" class="form-input" placeholder="Min 8 characters" minlength="8" />
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <a href="/admin/users" class="btn-secondary">Cancel</a>
+        <button type="submit" class="btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const i = document.getElementById('profile_picture');
+  i.addEventListener('change', () => {
+    const f = i.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = e => { document.getElementById('avatar-preview').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-full" />`; };
+    r.readAsDataURL(f);
+  });
+</script>
+
+<%- include('../partials/footer') %>

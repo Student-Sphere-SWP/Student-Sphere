@@ -1,0 +1,44 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">Browse Modules</h1>
+  <p class="text-gray-500 text-sm -mt-4">Click a module to enroll, or visit a module you're already in.</p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% modules.forEach(m => { %>
+    <div class="card hover:shadow-md transition-shadow">
+      <div class="flex items-start gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-sm"
+             style="background-color: <%= m.colour %>20; color: <%= m.colour %>">
+          <%= m.module_code.substring(0,2) %>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-800"><%= m.module_name %></p>
+          <p class="text-xs text-gray-400"><%= m.module_code %> · <%= m.student_count %> students</p>
+        </div>
+      </div>
+      <% if (m.description) { %>
+        <p class="text-xs text-gray-500 mb-3 line-clamp-2"><%= m.description %></p>
+      <% } %>
+
+      <% if (m.enrolled) { %>
+        <div class="flex gap-2">
+          <a href="/student/modules/<%= m.id %>" class="btn-primary text-xs flex-1 justify-center">Open Module</a>
+          <form method="POST" action="/student/modules/<%= m.id %>/unenroll"
+                onsubmit="return confirm('Unenroll from this module?')">
+            <button type="submit" class="btn-secondary text-xs">Unenroll</button>
+          </form>
+        </div>
+      <% } else { %>
+        <form method="POST" action="/student/modules/<%= m.id %>/enroll">
+          <button type="submit" class="btn-secondary w-full justify-center text-xs">Enroll</button>
+        </form>
+      <% } %>
+    </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

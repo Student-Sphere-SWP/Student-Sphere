@@ -1,0 +1,55 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+  <%
+    const pct = Math.round(Number(score) || 0);
+    const topicName = quiz?.topic_name || 'Practice Quiz';
+    const moduleId = quiz?.module_id || '';
+    const results = (questions || []).map(q => {
+      const userAnswer = answers?.[`answer_${q.id}`] || 'Not answered';
+      return {
+        question: q.question_text,
+        userAnswer,
+        correctAnswer: q.correct_option,
+        correct: userAnswer === q.correct_option
+      };
+    });
+  %>
+  <div class="card text-center py-8">
+    <div class="w-24 h-24 rounded-full mx-auto flex items-center justify-center text-3xl font-bold
+      <%= pct >= 70 ? 'bg-green-100 text-green-700' : pct >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700' %>">
+      <%= pct %>%
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900 mt-4">Practice Complete!</h1>
+    <p class="text-gray-500 mt-1">Topic: <strong><%= topicName %></strong></p>
+    <p class="text-gray-600 mt-1">You scored <strong><%= pct %>%</strong> (<strong><%= correct %>/<%= total %></strong>)</p>
+    <p class="text-xs text-gray-400 mt-2 italic">Practice quizzes do not affect your progress tracking.</p>
+  </div>
+
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Answer Breakdown</h2>
+    <div class="space-y-4">
+      <% results.forEach((r, idx) => { %>
+      <div class="p-3 rounded-lg border <%= r.correct ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50' %>">
+        <p class="text-sm font-medium text-gray-800">
+          <span class="<%= r.correct ? 'text-green-600' : 'text-red-600' %> mr-1"><%= r.correct ? '✓' : '✗' %></span>
+          <%= idx + 1 %>. <%= r.question %>
+        </p>
+        <div class="mt-2 text-xs space-y-1">
+          <p>Your answer: <strong class="<%= r.correct ? 'text-green-700' : 'text-red-700' %>"><%= r.userAnswer %></strong></p>
+          <% if (!r.correct) { %>
+          <p>Correct answer: <strong class="text-green-700"><%= r.correctAnswer %></strong></p>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <a href="/student/modules/<%= moduleId %>" class="btn-secondary">Back to Module</a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

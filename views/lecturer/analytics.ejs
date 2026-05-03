@@ -1,0 +1,106 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <div class="flex items-center gap-3">
+    <a href="/lecturer/modules/<%= module.id %>" class="text-gray-400 hover:text-gray-600 text-sm">← Module</a>
+    <h1 class="text-2xl font-bold text-gray-900">Analytics — <%= module.module_name %></h1>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Topic struggle bar chart -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-700 mb-4">Average Score by Topic</h2>
+      <% if (!topicStats.length) { %>
+        <p class="text-gray-400 text-sm text-center py-8">No quiz data yet.</p>
+      <% } else { %>
+        <canvas id="topicsChart" height="250"></canvas>
+      <% } %>
+    </div>
+
+    <!-- Topics table -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-700 mb-4">Topic Performance</h2>
+      <% if (!topicStats.length) { %>
+        <p class="text-gray-400 text-sm text-center py-8">No data yet.</p>
+      <% } else { %>
+      <div class="space-y-3">
+        <% topicStats.forEach(t => { %>
+        <div class="p-3 rounded-lg bg-gray-50">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-sm font-medium text-gray-700 truncate max-w-[65%]"><%= t.topic_name %></p>
+            <span class="text-sm font-bold <%= parseFloat(t.avg_score) >= 70 ? 'text-green-600' : parseFloat(t.avg_score) >= 50 ? 'text-yellow-600' : 'text-red-600' %>">
+              <%= t.avg_score %>%
+            </span>
+          </div>
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div class="h-full rounded-full <%= parseFloat(t.avg_score) >= 70 ? 'bg-green-500' : parseFloat(t.avg_score) >= 50 ? 'bg-yellow-500' : 'bg-red-500' %>"
+                 style="width: <%= t.avg_score %>%"></div>
+          </div>
+          <p class="text-xs text-gray-400 mt-1"><%= t.attempt_count %> attempts</p>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Recent quiz scores -->
+    <% if (recentScores.length) { %>
+    <div class="card lg:col-span-2">
+      <h2 class="text-base font-semibold text-gray-700 mb-4">Recent Student Scores</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="text-left px-4 py-2 text-xs text-gray-500">Student</th>
+              <th class="text-left px-4 py-2 text-xs text-gray-500">Topic</th>
+              <th class="text-left px-4 py-2 text-xs text-gray-500">Score</th>
+              <th class="text-left px-4 py-2 text-xs text-gray-500">Date</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            <% recentScores.forEach(s => { %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-2 text-gray-700"><%= s.student_name %></td>
+              <td class="px-4 py-2 text-gray-500"><%= s.topic_name %></td>
+              <td class="px-4 py-2 font-semibold <%= parseFloat(s.score_percentage) >= 70 ? 'text-green-600' : parseFloat(s.score_percentage) >= 50 ? 'text-yellow-600' : 'text-red-600' %>">
+                <%= s.score_percentage %>%
+              </td>
+              <td class="px-4 py-2 text-gray-400"><%= new Date(s.attempted_at).toLocaleDateString() %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (topicStats.length) { %>
+<script>
+const topics = <%- JSON.stringify(topicStats) %>;
+new Chart(document.getElementById('topicsChart'), {
+  type: 'bar',
+  data: {
+    labels: topics.map(t => t.topic_name),
+    datasets: [{
+      label: 'Avg Score %',
+      data: topics.map(t => t.avg_score),
+      backgroundColor: topics.map(t =>
+        parseFloat(t.avg_score) >= 70 ? '#10b981' :
+        parseFloat(t.avg_score) >= 50 ? '#f59e0b' : '#ef4444'),
+      borderRadius: 6
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true, max: 100 } }
+  }
+});
+</script>
+<% } %>
+
+<%- include('../partials/footer') %>

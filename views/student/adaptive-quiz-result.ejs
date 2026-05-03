@@ -1,0 +1,83 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+  <%
+    const pct = Math.round(scorePct);
+    let level = 'Needs Work';
+    let levelColor = 'red';
+    if (pct >= 85)      { level = 'Mastered';      levelColor = 'green';   }
+    else if (pct >= 70) { level = 'Proficient';    levelColor = 'emerald'; }
+    else if (pct >= 50) { level = 'Getting There'; levelColor = 'yellow';  }
+  %>
+
+  <!-- Score card -->
+  <div class="card text-center py-10">
+    <div class="w-24 h-24 rounded-full mx-auto flex items-center justify-center text-3xl font-extrabold
+      <%= levelColor === 'green'   ? 'bg-green-100   text-green-700'   :
+          levelColor === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
+          levelColor === 'yellow'  ? 'bg-yellow-100  text-yellow-700'  :
+                                     'bg-red-100     text-red-700' %>">
+      <%= pct %>%
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900 mt-4">Adaptive Quiz Complete!</h1>
+    <p class="text-gray-500 mt-1">Topic: <strong class="text-gray-700"><%= topicName %></strong></p>
+    <p class="text-gray-600 mt-1">You got <strong><%= score %></strong> out of <strong><%= total %></strong> correct</p>
+
+    <span class="inline-block mt-3 px-4 py-1.5 rounded-full text-sm font-semibold
+      <%= levelColor === 'green'   ? 'bg-green-100   text-green-700'   :
+          levelColor === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
+          levelColor === 'yellow'  ? 'bg-yellow-100  text-yellow-700'  :
+                                     'bg-red-100     text-red-700' %>">
+      <%= level %>
+    </span>
+
+    <% if (improved) { %>
+    <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm font-medium">
+      🎉 You've reached 70%+ — this topic may drop off your weak list!
+    </div>
+    <% } else { %>
+    <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-700 text-sm font-medium">
+      💪 Keep practising — each attempt improves your adaptive difficulty!
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Answer breakdown -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Answer Breakdown</h2>
+    <div class="space-y-4">
+      <% results.forEach((r, idx) => { %>
+      <div class="p-3.5 rounded-xl border <%= r.correct ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50' %>">
+        <p class="text-sm font-medium text-gray-800">
+          <span class="<%= r.correct ? 'text-green-600' : 'text-red-600' %> mr-1 font-bold"><%= r.correct ? '✓' : '✗' %></span>
+          <%= idx + 1 %>. <%= r.question %>
+        </p>
+        <div class="mt-2 text-xs space-y-1">
+          <p>Your answer: <strong class="<%= r.correct ? 'text-green-700' : 'text-red-700' %>"><%= r.userAnswer %></strong></p>
+          <% if (!r.correct) { %>
+          <p>Correct answer: <strong class="text-green-700"><%= r.correctAnswer %></strong></p>
+          <% } %>
+          <% if (r.explanation) { %>
+          <p class="text-gray-600 italic mt-1.5 pl-2 border-l-2 border-gray-300"><%= r.explanation %></p>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex flex-wrap gap-3">
+    <a href="/student/adaptive-quiz" class="btn-secondary">← Try Another Topic</a>
+    <% if (!improved) { %>
+    <form method="POST" action="/student/adaptive-quiz/generate" class="inline">
+      <input type="hidden" name="weak_topic_id" value="<%= weakTopicId %>" />
+      <button type="submit" class="btn-primary">🔁 Retry This Topic</button>
+    </form>
+    <% } %>
+    <a href="/student/progress" class="btn-secondary">View My Progress</a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

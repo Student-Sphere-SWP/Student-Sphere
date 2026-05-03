@@ -1,0 +1,174 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<style>
+  .hero-banner {
+    background-image:
+      linear-gradient(135deg, rgba(79,70,229,0.82) 0%, rgba(99,102,241,0.65) 50%, rgba(16,185,129,0.55) 100%),
+      url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80');
+    background-size: cover;
+    background-position: center 40%;
+  }
+  .glass-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .score-bar { transition: width 0.6s ease; }
+</style>
+
+<div class="space-y-6">
+
+  <!-- Hero banner -->
+  <div class="hero-banner rounded-2xl overflow-hidden shadow-lg">
+    <div class="px-8 py-10 flex flex-wrap items-center justify-between gap-6">
+      <div class="text-white">
+        <p class="text-sm font-medium text-indigo-200 mb-1">Welcome back 👋</p>
+        <h1 class="text-3xl font-extrabold tracking-tight"><%= user.name.split(' ')[0] %></h1>
+        <p class="text-indigo-100 text-sm mt-1">Keep going — you're making great progress!</p>
+        <div class="flex gap-3 mt-5">
+          <a href="/student/modules" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-indigo-700 text-sm font-semibold rounded-xl shadow hover:bg-indigo-50 transition-colors">
+            📚 Browse Modules
+          </a>
+          <a href="/student/progress" class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white text-sm font-semibold rounded-xl border border-white/30 hover:bg-white/30 transition-colors">
+            📊 My Progress
+          </a>
+          <a href="/student/adaptive-quiz" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl shadow hover:bg-emerald-400 transition-colors">
+            🧠 Adaptive Quiz
+          </a>
+        </div>
+      </div>
+
+      <!-- Glassy stat pills -->
+      <div class="grid grid-cols-2 gap-3 min-w-[260px]">
+        <div class="glass-card rounded-xl p-4 text-white text-center">
+          <p class="text-2xl font-extrabold"><%= modules.length %></p>
+          <p class="text-xs text-indigo-100 mt-0.5">Modules</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-white text-center">
+          <p class="text-2xl font-extrabold"><%= masteredTopics %></p>
+          <p class="text-xs text-indigo-100 mt-0.5">Mastered</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-white text-center">
+          <p class="text-2xl font-extrabold"><%= totalTopics %></p>
+          <p class="text-xs text-indigo-100 mt-0.5">Practised</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-white text-center">
+          <p class="text-2xl font-extrabold"><%= overallAvg %>%</p>
+          <p class="text-xs text-indigo-100 mt-0.5">Avg Score</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+    <!-- Enrolled modules (wider) -->
+    <div class="lg:col-span-3 card">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-gray-800">My Modules</h2>
+        <a href="/student/modules" class="text-xs text-primary-600 hover:underline font-medium">Browse all →</a>
+      </div>
+      <% if (!modules.length) { %>
+        <div class="text-center py-12">
+          <p class="text-4xl mb-3">📭</p>
+          <p class="text-gray-400 text-sm">You haven't enrolled in any modules yet.</p>
+          <a href="/student/modules" class="btn-primary mt-4 text-sm">Browse Modules</a>
+        </div>
+      <% } else { %>
+      <div class="space-y-2">
+        <% modules.forEach(m => { %>
+        <a href="/student/modules/<%= m.id %>"
+           class="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-all group">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-sm font-bold shadow-sm module-tile"
+                 data-colour="<%= m.colour %>">
+              <%= m.module_code ? m.module_code.slice(0,2) : m.module_name.charAt(0) %>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-gray-800 group-hover:text-primary-700 truncate"><%= m.module_name %></p>
+              <p class="text-xs text-gray-400"><%= m.pdf_count %> notes · <%= m.announcement_count %> announcements</p>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-500 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Recent scores (narrower) -->
+    <div class="lg:col-span-2 card flex flex-col">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-gray-800">Recent Scores</h2>
+        <a href="/student/progress" class="text-xs text-primary-600 hover:underline font-medium">All progress →</a>
+      </div>
+      <% if (!recentScores.length) { %>
+        <div class="flex-1 flex flex-col items-center justify-center text-center py-8 text-gray-400">
+          <p class="text-3xl mb-2">🎯</p>
+          <p class="text-sm">No quizzes taken yet.<br/>Generate one from a lecture note!</p>
+        </div>
+      <% } else { %>
+      <div class="space-y-3 flex-1">
+        <% recentScores.forEach(s => { %>
+        <%
+          const pct = parseFloat(s.score_percentage) || 0;
+          const scoreColor = pct >= 85 ? '#16a34a' : pct >= 70 ? '#22c55e' : pct >= 50 ? '#ca8a04' : '#dc2626';
+          const scoreBg = pct >= 85 ? 'bg-green-100 text-green-700' : pct >= 70 ? 'bg-emerald-100 text-emerald-700' : pct >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+        %>
+        <div class="p-3 rounded-xl border border-gray-100 space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate"><%= s.topic_name %></p>
+              <p class="text-xs text-gray-400"><%= s.module_name %> · <%= new Date(s.attempted_at).toLocaleDateString() %></p>
+            </div>
+            <span class="badge <%= scoreBg %> flex-shrink-0"><%= pct.toFixed(0) %>%</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-1.5">
+            <div class="h-1.5 rounded-full score-bar" data-pct="<%= pct %>" data-color="<%= scoreColor %>"></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <!-- Quick actions row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <a href="/student/modules" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-primary-300 hover:shadow-md transition-all text-center group border border-gray-100">
+      <span class="text-3xl group-hover:scale-110 transition-transform">📚</span>
+      <p class="text-sm font-medium text-gray-700">Browse Modules</p>
+    </a>
+    <a href="/student/progress" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-green-200 hover:shadow-md transition-all text-center group border border-gray-100">
+      <span class="text-3xl group-hover:scale-110 transition-transform">📈</span>
+      <p class="text-sm font-medium text-gray-700">My Progress</p>
+    </a>
+    <a href="/student/tutors" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-purple-200 hover:shadow-md transition-all text-center group border border-gray-100">
+      <span class="text-3xl group-hover:scale-110 transition-transform">🎓</span>
+      <p class="text-sm font-medium text-gray-700">Find a Tutor</p>
+    </a>
+    <a href="/student/sessions" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-blue-200 hover:shadow-md transition-all text-center group border border-gray-100">
+      <span class="text-3xl group-hover:scale-110 transition-transform">📅</span>
+      <p class="text-sm font-medium text-gray-700">Sessions</p>
+    </a>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.module-tile').forEach(el => {
+    el.style.backgroundColor = el.dataset.colour;
+  });
+  document.querySelectorAll('.score-bar').forEach(el => {
+    el.style.width = el.dataset.pct + '%';
+    el.style.backgroundColor = el.dataset.color;
+  });
+</script>
+
+<%- include('../partials/footer') %>

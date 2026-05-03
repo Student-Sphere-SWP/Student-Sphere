@@ -1,0 +1,162 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <h1 class="text-2xl font-bold text-gray-900">Manage Users</h1>
+    <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="btn-primary">
+      + Add User
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <form method="GET" action="/admin/users" class="flex flex-wrap gap-3 card py-4">
+    <select name="role" class="form-input w-auto">
+      <option value="">All roles</option>
+      <option value="admin"    <%= filter.role === 'admin'    ? 'selected' : '' %>>Admin</option>
+      <option value="lecturer" <%= filter.role === 'lecturer' ? 'selected' : '' %>>Lecturer</option>
+      <option value="mentor"   <%= filter.role === 'mentor'   ? 'selected' : '' %>>Mentor</option>
+      <option value="student"  <%= filter.role === 'student'  ? 'selected' : '' %>>Student</option>
+    </select>
+    <input type="text" name="search" value="<%= filter.search %>" placeholder="Search name or email..."
+           class="form-input flex-1 min-w-40" />
+    <button type="submit" class="btn-secondary">Filter</button>
+    <a href="/admin/users" class="btn-secondary">Clear</a>
+  </form>
+
+  <!-- Users table -->
+  <div class="card p-0 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Joined</th>
+            <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% users.forEach(u => { %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-3">
+              <div class="flex items-center gap-3">
+                <% if (u.profile_picture) { %>
+                  <img src="<%= u.profile_picture %>" class="w-8 h-8 rounded-full object-cover" alt="" />
+                <% } else { %>
+                  <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs">
+                    <%= u.name.charAt(0).toUpperCase() %>
+                  </div>
+                <% } %>
+                <div>
+                  <p class="font-medium text-gray-800"><%= u.name %></p>
+                  <p class="text-xs text-gray-400"><%= u.email %></p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-3">
+              <%
+                const bc = { admin:'bg-red-100 text-red-700', lecturer:'bg-blue-100 text-blue-700',
+                             student:'bg-green-100 text-green-700', mentor:'bg-purple-100 text-purple-700' };
+              %>
+              <span class="badge <%= bc[u.role] %>"><%= u.role %></span>
+            </td>
+            <td class="px-6 py-3 text-gray-500 hidden md:table-cell">
+              <%= new Date(u.created_at).toLocaleDateString() %>
+            </td>
+            <td class="px-6 py-3 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <% if (u.role === 'lecturer' || u.role === 'mentor') { %>
+                  <a href="/admin/users/<%= u.id %>/modules" class="text-xs text-blue-600 hover:underline">Modules</a>
+                <% } %>
+                <a href="/admin/users/<%= u.id %>/edit" class="text-xs text-gray-600 hover:underline">Edit</a>
+                <% if (u.id !== user.id) { %>
+                  <form method="POST" action="/admin/users/<%= u.id %>?_method=DELETE"
+                        onsubmit="return confirm('Delete <%= u.name %>? This cannot be undone.')">
+                    <button type="submit" class="text-xs text-red-500 hover:underline">Delete</button>
+                  </form>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (!users.length) { %>
+          <tr><td colspan="4" class="px-6 py-10 text-center text-gray-400">No users found.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black bg-opacity-40" onclick="document.getElementById('create-modal').classList.add('hidden')"></div>
+  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-lg font-semibold text-gray-800">Add New User</h2>
+      <button onclick="document.getElementById('create-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">✕</button>
+    </div>
+
+    <form method="POST" action="/admin/users" enctype="multipart/form-data" class="space-y-4">
+      <!-- Avatar upload -->
+      <div class="flex items-center gap-4">
+        <div id="create-avatar-preview" class="w-14 h-14 rounded-full bg-gray-100 border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 text-xs text-center cursor-pointer">
+          Photo
+        </div>
+        <input type="file" id="create_profile_picture" name="profile_picture" accept="image/*" class="hidden" />
+        <button type="button" onclick="document.getElementById('create_profile_picture').click()" class="btn-secondary text-xs">Upload Photo</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Full name</label>
+          <input type="text" name="name" required class="form-input" placeholder="Jane Doe" minlength="2" />
+        </div>
+        <div>
+          <label class="form-label">Email</label>
+          <input type="email" name="email" required class="form-input" placeholder="user@example.com" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Role</label>
+          <select name="role" required class="form-input">
+            <option value="student">Student</option>
+            <option value="lecturer">Lecturer</option>
+            <option value="mentor">Mentor</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Password</label>
+          <input type="password" name="password" required class="form-input" placeholder="Min 8 chars" minlength="8" />
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label">Bio <span class="text-gray-400 font-normal">(optional)</span></label>
+        <textarea name="bio" rows="2" class="form-input" placeholder="Short bio..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('create-modal').classList.add('hidden')" class="btn-secondary">Cancel</button>
+        <button type="submit" class="btn-primary">Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const ci = document.getElementById('create_profile_picture');
+  ci.addEventListener('change', () => {
+    const f = ci.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = e => { document.getElementById('create-avatar-preview').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-full" />`; };
+    r.readAsDataURL(f);
+  });
+</script>
+
+<%- include('../partials/footer') %>

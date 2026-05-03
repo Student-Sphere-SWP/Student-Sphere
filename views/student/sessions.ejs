@@ -1,0 +1,93 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">Tutorial Sessions</h1>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Upcoming sessions -->
+    <div class="xl:col-span-2 space-y-4">
+      <h2 class="text-base font-semibold text-gray-700">Upcoming Sessions</h2>
+      <% if (!upcomingSessions.length) { %>
+        <div class="card text-center py-10 text-gray-400">
+          <p class="text-3xl mb-2">📅</p>
+          <p>No upcoming sessions available.</p>
+        </div>
+      <% } else { %>
+        <% upcomingSessions.forEach(s => { %>
+        <%
+          const rsvpd = s.i_rsvpd;
+          const full = Number(s.rsvp_count) >= Number(s.capacity);
+        %>
+        <div class="card space-y-2">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-gray-800"><%= s.topic %></p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                <%= new Date(s.date_time).toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) %>
+                at <strong><%= new Date(s.date_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) %></strong>
+              </p>
+              <% if (s.meeting_link_or_location) { %><p class="text-xs text-gray-400">📍 <%= s.meeting_link_or_location %></p><% } %>
+              <div class="flex flex-wrap gap-2 mt-1">
+                <span class="badge bg-purple-100 text-purple-700"><%= s.tutor_name %></span>
+                <span class="badge bg-gray-100 text-gray-600"><%= s.module_name %></span>
+                <span class="badge <%= Number(s.rsvp_count) >= Number(s.capacity) ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700' %>">
+                  <%= s.rsvp_count %>/<%= s.capacity %> spots
+                </span>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <% if (rsvpd) { %>
+                <form method="POST" action="/student/sessions/<%= s.id %>/cancel-rsvp">
+                  <button type="submit" class="btn-secondary text-xs" onclick="return confirm('Cancel your RSVP?')">Cancel RSVP</button>
+                </form>
+              <% } else if (full) { %>
+                <span class="badge bg-gray-100 text-gray-500">Full</span>
+              <% } else { %>
+                <form method="POST" action="/student/sessions/<%= s.id %>/rsvp">
+                  <button class="btn-primary text-xs">RSVP</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+          <% if (s.description_text) { %>
+          <p class="text-xs text-gray-500 border-t border-gray-100 pt-2"><%= s.description_text %></p>
+          <% } %>
+        </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- My RSVPs -->
+    <div class="space-y-4">
+      <h2 class="text-base font-semibold text-gray-700">My RSVPs</h2>
+      <% if (!myRsvps.length) { %>
+        <div class="card text-center py-8 text-gray-400 text-sm">You have no upcoming RSVPs.</div>
+      <% } else { %>
+        <% myRsvps.forEach(r => { %>
+        <div class="card space-y-1">
+          <p class="text-sm font-semibold text-gray-800"><%= r.topic %></p>
+          <p class="text-xs text-gray-400">
+            <%= new Date(r.date_time).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) %>
+            at <%= new Date(r.date_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) %>
+          </p>
+          <p class="text-xs text-gray-400"><%= r.module_name %></p>
+          <div class="flex items-center justify-between mt-2">
+            <% if (r.attended) { %>
+              <span class="badge bg-green-100 text-green-700">✓ Attended</span>
+            <% } else { %>
+              <span class="badge bg-yellow-100 text-yellow-700">Pending</span>
+            <% } %>
+            <form method="POST" action="/student/sessions/<%= r.session_id || r.id %>/cancel-rsvp">
+              <button class="text-xs text-red-400 hover:text-red-600">Cancel</button>
+            </form>
+          </div>
+        </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

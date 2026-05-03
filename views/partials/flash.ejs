@@ -1,0 +1,20 @@
+<% if (typeof success !== 'undefined' && success) { %>
+<div class="mb-4 flex items-start gap-3 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">
+  <span class="text-green-500 mt-0.5">✓</span>
+  <span><%= success %></span>
+</div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+<div class="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+  <span class="text-red-500 mt-0.5">✕</span>
+  <span><%= error %></span>
+</div>
+<% } %>
+
+<% if (typeof info !== 'undefined' && info) { %>
+<div class="mb-4 flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-4 py-3 text-sm">
+  <span class="text-blue-500 mt-0.5">ℹ</span>
+  <span><%= info %></span>
+</div>
+<% } %>

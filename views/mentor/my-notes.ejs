@@ -1,0 +1,80 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+  <div>
+    <a href="/mentor/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">My Notes</h1>
+    <p class="text-sm text-gray-500">Upload supplementary notes visible to students on your tutor profile.</p>
+  </div>
+
+  <!-- Upload form -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Upload a Note</h2>
+    <form method="POST" action="/mentor/upload-note" enctype="multipart/form-data" class="space-y-4">
+      <div>
+        <label class="form-label">Module</label>
+        <select name="module_id" class="form-input" required>
+          <option value="">Select a module…</option>
+          <% modules.forEach(m => { %>
+          <option value="<%= m.id %>"><%= m.module_name %> (<%= m.module_code %>)</option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Topic Name</label>
+        <input type="text" name="topic_name" class="form-input" placeholder="e.g. Week 3 Summary" required maxlength="255" />
+      </div>
+      <div>
+        <label class="form-label">PDF File</label>
+        <input type="file" name="pdf" accept="application/pdf" class="form-input" required />
+        <p class="text-xs text-gray-400 mt-1">PDF only, max 20 MB</p>
+      </div>
+      <button type="submit" class="btn-primary">Upload Note</button>
+    </form>
+  </div>
+
+  <!-- My notes list -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800">Uploaded Notes</h2>
+      <!-- Module filter -->
+      <form method="GET" action="/mentor/my-notes" class="flex gap-2 items-center">
+        <select name="module_id" onchange="this.form.submit()" class="form-input text-xs py-1.5">
+          <option value="">All Modules</option>
+          <% modules.forEach(m => { %>
+          <option value="<%= m.id %>" <%= filterModuleId == m.id ? 'selected' : '' %>><%= m.module_name %></option>
+          <% }) %>
+        </select>
+      </form>
+    </div>
+
+    <% if (!notes.length) { %>
+      <p class="text-gray-400 text-sm text-center py-8">No notes uploaded yet.</p>
+    <% } else { %>
+    <div class="space-y-2">
+      <% notes.forEach(n => { %>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-red-500 text-xl flex-shrink-0">📄</span>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-700 truncate"><%= n.topic_name %></p>
+            <p class="text-xs text-gray-400"><%= n.module_name %> · <%= n.file_name %></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <a href="<%= n.file_url %>" target="_blank" download class="text-xs text-blue-600 hover:underline">⬇ Download</a>
+          <form method="POST" action="/mentor/my-notes/<%= n.id %>?_method=DELETE"
+                onsubmit="return confirm('Delete this note?')">
+            <button type="submit" class="text-xs text-red-400 hover:text-red-600">Delete</button>
+          </form>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

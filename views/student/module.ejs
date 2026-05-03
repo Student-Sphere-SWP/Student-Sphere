@@ -1,0 +1,179 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full" style="background-color: <%= module.colour %>"></div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= module.module_name %></h1>
+        <span class="badge bg-gray-100 text-gray-600"><%= module.module_code %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Left col: PDFs + Announcements + Manual quizzes -->
+    <div class="xl:col-span-2 space-y-6">
+
+      <!-- Announcements (pinned first) -->
+      <% const pinned = announcements.filter(a => a.is_pinned); %>
+      <% const unpinned = announcements.filter(a => !a.is_pinned); %>
+      <% if (announcements.length) { %>
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-800 mb-4">Announcements</h2>
+        <div class="space-y-3">
+          <% [...pinned, ...unpinned].forEach(a => { %>
+          <div class="p-3 rounded-lg border <%= a.is_pinned ? 'border-amber-200 bg-amber-50' : 'border-gray-100 bg-gray-50' %>">
+            <% if (a.is_pinned) { %><span class="text-xs text-amber-600 font-medium">📌 Pinned</span><% } %>
+            <p class="text-sm font-semibold text-gray-800"><%= a.title %></p>
+            <p class="text-xs text-gray-400 mt-0.5"><%= a.lecturer_name %> · <%= new Date(a.created_at).toLocaleDateString() %></p>
+            <p class="text-sm text-gray-600 mt-2 whitespace-pre-line"><%= a.content %></p>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Lecture Notes + Quiz Generator -->
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-800 mb-4">Lecture Notes</h2>
+        <% if (!pdfs.length) { %>
+          <p class="text-gray-400 text-sm text-center py-6">No lecture notes have been uploaded yet.</p>
+        <% } else { %>
+        <div class="space-y-3">
+          <% pdfs.forEach(p => { %>
+          <div class="flex items-start justify-between p-3 bg-gray-50 rounded-lg gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-red-500 text-xl flex-shrink-0">📄</span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-700 truncate"><%= p.topic_name %></p>
+                <p class="text-xs text-gray-400"><%= p.file_name %></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <a href="<%= p.file_url %>" target="_blank" download
+                 class="text-xs text-blue-600 hover:underline whitespace-nowrap">⬇ Download</a>
+              <!-- AI Quiz button -->
+                    <button onclick='openQuizModal(<%- JSON.stringify(p.id) %>, <%- JSON.stringify(p.topic_name) %>)'
+                      class="text-xs text-primary-600 hover:underline whitespace-nowrap">🧠 Generate Quiz</button>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Practice quizzes (manual) -->
+      <% if (manualQuizzes.length) { %>
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-800 mb-4">Practice Quizzes</h2>
+        <div class="space-y-2">
+          <% manualQuizzes.forEach(q => { %>
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p class="text-sm font-medium text-gray-700"><%= q.topic_name %></p>
+              <p class="text-xs text-gray-400"><%= q.question_count %> questions</p>
+            </div>
+            <a href="/student/manual-quiz/<%= q.id %>" class="btn-secondary text-xs">Take Quiz</a>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Right: Chat -->
+    <div class="card flex flex-col" style="height: 580px;">
+      <h2 class="text-base font-semibold text-gray-800 mb-3">Module Chat</h2>
+      <div id="chat-messages" class="flex-1 overflow-y-auto space-y-3 pr-1 mb-3">
+        <% if (!messages.length) { %>
+          <p class="text-gray-400 text-sm text-center py-6">No messages yet.</p>
+        <% } %>
+        <% messages.forEach(msg => { %>
+        <div class="<%= msg.user_id === user.id ? 'text-right' : 'text-left' %>">
+          <div class="inline-block max-w-[90%]">
+            <% if (msg.user_id !== user.id) { %>
+              <p class="text-xs text-gray-400 mb-0.5">
+                <% if (msg.profile_picture) { %>
+                  <img src="<%= msg.profile_picture %>" class="inline w-4 h-4 rounded-full object-cover mr-1" />
+                <% } %>
+                <%= msg.name %>
+                <span class="badge ml-1 <%= msg.role === 'lecturer' ? 'bg-blue-100 text-blue-700' : msg.role === 'student' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700' %>"><%= msg.role %></span>
+              </p>
+            <% } %>
+            <div class="px-3 py-2 rounded-xl text-sm <%= msg.user_id === user.id ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700' %>">
+              <%= msg.message %>
+            </div>
+            <p class="text-xs text-gray-300 mt-0.5">
+              <%= new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) %>
+            </p>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <form method="POST" action="/student/modules/<%= module.id %>/messages#chat" class="flex gap-2">
+        <input type="text" name="message" required class="form-input flex-1 text-sm" placeholder="Type a message…" maxlength="1000" />
+        <button type="submit" class="btn-primary px-3">Send</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- AI Quiz Generation Modal -->
+<div id="quiz-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black bg-opacity-40" onclick="closeQuizModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-1">Generate AI Quiz</h2>
+    <p class="text-sm text-gray-500 mb-4">Topic: <strong id="modal-topic"></strong></p>
+    <form method="POST" action="/student/generate-quiz" id="quiz-gen-form">
+      <input type="hidden" name="pdf_note_id" id="modal-pdf-id" />
+      <div class="mb-4">
+        <label class="form-label">Number of Questions</label>
+        <select name="questions_count" class="form-input">
+          <option value="5">5 questions</option>
+          <option value="10" selected>10 questions</option>
+          <option value="15">15 questions</option>
+          <option value="20">20 questions</option>
+        </select>
+      </div>
+      <p class="text-xs text-gray-400 mb-4">
+        The system will extract text from the PDF and use Google Gemini AI to generate a personalised quiz.
+      </p>
+      <div class="flex gap-3">
+        <button type="button" onclick="closeQuizModal()" class="btn-secondary flex-1 justify-center">Cancel</button>
+        <button type="submit" id="gen-btn" class="btn-primary flex-1 justify-center">Generate</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Scroll chat
+  const chat = document.getElementById('chat-messages');
+  if (chat) chat.scrollTop = chat.scrollHeight;
+
+  // Auto-refresh every 10 seconds
+  setTimeout(() => location.reload(), 10000);
+
+  function openQuizModal(pdfId, topic) {
+    document.getElementById('modal-pdf-id').value = pdfId;
+    document.getElementById('modal-topic').textContent = topic;
+    document.getElementById('quiz-modal').classList.remove('hidden');
+  }
+  function closeQuizModal() {
+    document.getElementById('quiz-modal').classList.add('hidden');
+  }
+
+  // Show loading state during quiz generation
+  document.getElementById('quiz-gen-form').addEventListener('submit', () => {
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+  });
+</script>
+
+<%- include('../partials/footer') %>

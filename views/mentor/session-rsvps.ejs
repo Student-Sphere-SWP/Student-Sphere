@@ -1,0 +1,73 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+  <div>
+    <a href="/mentor/sessions" class="text-gray-400 hover:text-gray-600 text-sm">← My Sessions</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1"><%= session.session_title %></h1>
+    <p class="text-sm text-gray-500">
+      <%= new Date(session.session_date).toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) %>
+      <% if (session.session_time) { %> at <%= session.session_time.slice(0,5) %><% } %>
+      <% if (session.location) { %> · 📍 <%= session.location %><% } %>
+    </p>
+  </div>
+
+  <!-- Summary -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="card text-center">
+      <p class="text-2xl font-bold text-gray-900"><%= rsvps.length %></p>
+      <p class="text-xs text-gray-500 mt-1">RSVPs</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-bold text-green-600"><%= rsvps.filter(r => r.attended).length %></p>
+      <p class="text-xs text-gray-500 mt-1">Attended</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-bold text-gray-400"><%= rsvps.filter(r => !r.attended).length %></p>
+      <p class="text-xs text-gray-500 mt-1">Not Marked</p>
+    </div>
+  </div>
+
+  <!-- RSVP + Attendance -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800">Attendees</h2>
+    </div>
+
+    <% if (!rsvps.length) { %>
+      <p class="text-gray-400 text-sm text-center py-8">No students have RSVP'd to this session.</p>
+    <% } else { %>
+    <form method="POST" action="/mentor/sessions/<%= session.id %>/attendance">
+      <div class="space-y-2 mb-4">
+        <% rsvps.forEach(r => { %>
+        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div class="flex items-center gap-3">
+            <% if (r.profile_picture) { %>
+              <img src="<%= r.profile_picture %>" class="w-8 h-8 rounded-full object-cover" />
+            <% } else { %>
+              <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
+                <%= r.name.charAt(0).toUpperCase() %>
+              </div>
+            <% } %>
+            <div>
+              <p class="text-sm font-medium text-gray-700"><%= r.name %></p>
+              <p class="text-xs text-gray-400"><%= r.email %></p>
+            </div>
+          </div>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="attended_<%= r.user_id %>" value="1"
+                   class="rounded text-green-600 focus:ring-green-500"
+                   <%= r.attended ? 'checked' : '' %> />
+            <span class="text-xs text-gray-600">Attended</span>
+          </label>
+        </div>
+        <% }) %>
+      </div>
+      <button type="submit" class="btn-primary">Save Attendance</button>
+    </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

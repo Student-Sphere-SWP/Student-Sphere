@@ -1,0 +1,16 @@
+    </main>
+  </div>
+</div>
+
+<script>
+  // Mobile menu toggle
+  const btn     = document.getElementById('mobile-menu-btn');
+  const menu    = document.getElementById('mobile-menu');
+  const overlay = document.getElementById('mobile-menu-overlay');
+  const close   = document.getElementById('mobile-menu-close');
+  if (btn)     btn.addEventListener('click',     () => menu.classList.toggle('hidden'));
+  if (overlay) overlay.addEventListener('click', () => menu.classList.add('hidden'));
+  if (close)   close.addEventListener('click',   () => menu.classList.add('hidden'));
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+
+<div class="space-y-6">
+  <div>
+    <a href="/mentor/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">Module Analytics</h1>
+    <p class="text-sm text-gray-500"><%= moduleName %></p>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card text-center">
+      <p class="text-2xl font-bold text-gray-900"><%= stats.totalStudents %></p>
+      <p class="text-xs text-gray-500 mt-1">Students</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-bold text-primary-600"><%= stats.totalAttempts %></p>
+      <p class="text-xs text-gray-500 mt-1">Quiz Attempts</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-bold text-green-600"><%= stats.avgScore ? parseFloat(stats.avgScore).toFixed(1) : '—' %>%</p>
+      <p class="text-xs text-gray-500 mt-1">Avg Score</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-bold text-yellow-500"><%= stats.avgRating ? parseFloat(stats.avgRating).toFixed(1) : '—' %></p>
+      <p class="text-xs text-gray-500 mt-1">Avg Rating ★</p>
+    </div>
+  </div>
+
+  <!-- Score breakdown chart -->
+  <% if (topicStats.length) { %>
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Avg Score by Topic</h2>
+    <canvas id="topicChart" height="90"></canvas>
+  </div>
+  <% } %>
+
+  <!-- Per-topic progress table -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Topic Breakdown</h2>
+    <% if (!topicStats.length) { %>
+      <p class="text-gray-400 text-sm text-center py-8">No quiz attempts recorded yet.</p>
+    <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left py-2 text-xs font-medium text-gray-500">Topic</th>
+            <th class="text-center py-2 text-xs font-medium text-gray-500">Attempts</th>
+            <th class="text-center py-2 text-xs font-medium text-gray-500">Avg Score</th>
+            <th class="text-center py-2 text-xs font-medium text-gray-500">Top Score</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% topicStats.forEach(t => { %>
+          <% const avg = parseFloat(t.avg_score) || 0; %>
+          <tr>
+            <td class="py-3 font-medium text-gray-700"><%= t.topic_name %></td>
+            <td class="py-3 text-center text-gray-600"><%= t.attempts %></td>
+            <td class="py-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <div class="w-20 bg-gray-200 rounded-full h-1.5">
+                  <div class="h-1.5 rounded-full
+                    <%= avg >= 70 ? 'bg-green-500' : avg >= 50 ? 'bg-yellow-400' : 'bg-red-400' %>"
+                    style="width: <%= avg %>%"></div>
+                </div>
+                <span class="text-xs font-semibold text-gray-700"><%= avg.toFixed(0) %>%</span>
+              </div>
+            </td>
+            <td class="py-3 text-center text-gray-600"><%= parseFloat(t.top_score).toFixed(0) %>%</td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (topicStats.length) { %>
+<script>
+  const ctx = document.getElementById('topicChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: <%- JSON.stringify(topicStats.map(t => t.topic_name)) %>,
+      datasets: [{
+        label: 'Avg Score %',
+        data: <%- JSON.stringify(topicStats.map(t => parseFloat(t.avg_score).toFixed(1))) %>,
+        backgroundColor: <%- JSON.stringify(topicStats.map(t => parseFloat(t.avg_score) >= 70 ? 'rgba(34,197,94,0.7)' : parseFloat(t.avg_score) >= 50 ? 'rgba(234,179,8,0.7)' : 'rgba(239,68,68,0.7)')) %>
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      scales: { x: { min: 0, max: 100, ticks: { callback: v => v + '%' } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+</script>
+<% } %>
+
+<%- include('../partials/footer') %>

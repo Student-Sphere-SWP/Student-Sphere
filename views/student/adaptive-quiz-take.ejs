@@ -1,0 +1,122 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div>
+    <a href="/student/adaptive-quiz" class="text-gray-400 hover:text-gray-600 text-sm">← Back to Topic Selection</a>
+    <div class="flex items-start justify-between mt-2 gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">🧠 Adaptive Quiz</h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Topic: <strong class="text-gray-800"><%= topicName %></strong> ·
+          <%= moduleName %> ·
+          <%= questions.length %> questions
+        </p>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <p class="text-xs text-gray-400">Your previous avg</p>
+        <p class="text-2xl font-extrabold <%= avgScore < 50 ? 'text-red-600' : 'text-yellow-600' %>"><%= avgScore %>%</p>
+      </div>
+    </div>
+
+    <!-- Adaptive level banner -->
+    <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
+      <%= avgScore < 50 ? 'bg-red-50 text-red-700 border border-red-200' : avgScore < 70 ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' %>">
+      <% if (avgScore < 50) { %>
+        🔴 Foundational level — building core understanding
+      <% } else if (avgScore < 70) { %>
+        🟡 Intermediate level — targeting common mistakes
+      <% } else { %>
+        🟢 Advanced level — pushing toward mastery
+      <% } %>
+    </div>
+  </div>
+
+  <form method="POST" action="/student/adaptive-quiz/submit" id="quizForm">
+    <input type="hidden" name="weak_topic_id"   value="<%= weakTopicId %>" />
+    <input type="hidden" name="module_id"        value="<%= moduleId %>" />
+    <input type="hidden" name="topic_name"       value="<%= topicName %>" />
+    <input type="hidden" name="questions_json"   value="<%- JSON.stringify(questions) %>" />
+    <input type="hidden" name="answers_json"     id="answersInput" value="[]" />
+
+    <div class="space-y-4" id="questionsContainer">
+      <% questions.forEach((q, idx) => { %>
+      <div class="card" id="q-<%= idx %>">
+        <p class="text-sm font-semibold text-gray-800 mb-3">
+          <span class="text-emerald-600 mr-1"><%= idx + 1 %>.</span> <%= q.question %>
+        </p>
+        <div class="space-y-2">
+          <% ['A','B','C','D'].forEach(letter => { %>
+          <% if (q.options[letter]) { %>
+          <label class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 cursor-pointer transition-colors has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50">
+            <input type="radio" name="answer_<%= idx %>" value="<%= letter %>"
+                   class="text-emerald-600 focus:ring-emerald-500 answer-radio"
+                   data-idx="<%= idx %>" />
+            <span class="text-sm text-gray-700"><strong class="text-emerald-600 mr-1"><%= letter %>.</strong> <%= q.options[letter] %></span>
+          </label>
+          <% } %>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="sticky bottom-4 bg-white border border-gray-200 rounded-xl shadow-lg px-5 py-4 flex items-center justify-between gap-4 mt-6">
+      <div class="flex-1">
+        <div class="flex justify-between text-xs text-gray-500 mb-1">
+          <span id="answeredCount">0</span> / <%= questions.length %> answered
+        </div>
+        <div class="bg-gray-100 rounded-full h-2">
+          <div id="progressBar" class="bg-emerald-500 h-2 rounded-full transition-all" style="width:0%"></div>
+        </div>
+      </div>
+      <button type="submit" id="submitBtn"
+              class="btn-primary px-6 py-2.5 opacity-50 cursor-not-allowed"
+              disabled>
+        Submit Quiz
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const total   = <%= questions.length %>;
+  const answers = new Array(total).fill(null);
+
+  document.querySelectorAll('.answer-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const idx = parseInt(radio.dataset.idx);
+      answers[idx] = radio.value;
+
+      const answered = answers.filter(a => a !== null).length;
+      document.getElementById('answeredCount').textContent = answered;
+      document.getElementById('progressBar').style.width = (answered / total * 100) + '%';
+
+      if (answered === total) {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+
+      document.getElementById('answersInput').value = JSON.stringify(answers);
+    });
+  });
+
+  // Allow partial submit with confirmation
+  document.getElementById('quizForm').addEventListener('submit', e => {
+    const answered = answers.filter(a => a !== null).length;
+    if (answered < total) {
+      if (!confirm(`You have only answered ${answered} of ${total} questions. Submit anyway?`)) {
+        e.preventDefault();
+      } else {
+        document.getElementById('answersInput').value = JSON.stringify(answers);
+      }
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

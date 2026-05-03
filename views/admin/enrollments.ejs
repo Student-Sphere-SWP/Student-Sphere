@@ -1,0 +1,59 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">Manage Enrollments</h1>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Enroll student form -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Enroll Student in Module</h2>
+      <form method="POST" action="/admin/enrollments" class="space-y-4">
+        <div>
+          <label class="form-label">Student</label>
+          <select name="student_id" required class="form-input">
+            <option value="">Select student…</option>
+            <% students.forEach(s => { %>
+              <option value="<%= s.id %>"><%= s.name %> (<%= s.email %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Module</label>
+          <select name="module_id" required class="form-input">
+            <option value="">Select module…</option>
+            <% modules.forEach(m => { %>
+              <option value="<%= m.id %>"><%= m.module_code %> — <%= m.module_name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary w-full justify-center">Enroll Student</button>
+      </form>
+    </div>
+
+    <!-- Recent enrollments -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Recent Enrollments</h2>
+      <div class="space-y-2 max-h-96 overflow-y-auto">
+        <% enrollments.forEach(e => { %>
+        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div>
+            <p class="text-sm font-medium text-gray-700"><%= e.student_name %></p>
+            <p class="text-xs text-gray-400"><%= e.module_code %> — <%= e.module_name %></p>
+          </div>
+          <form method="POST" action="/admin/enrollments/<%= e.id %>?_method=DELETE"
+                onsubmit="return confirm('Remove this enrollment?')">
+            <button type="submit" class="text-xs text-red-500 hover:underline">Remove</button>
+          </form>
+        </div>
+        <% }) %>
+        <% if (!enrollments.length) { %>
+          <p class="text-gray-400 text-sm text-center py-6">No enrollments yet.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

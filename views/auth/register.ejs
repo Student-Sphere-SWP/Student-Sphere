@@ -1,0 +1,100 @@
+<%- include('../partials/head', { title: 'Register' }) %>
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-indigo-100 p-4">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-primary-600 rounded-2xl shadow-lg mb-4">
+        <span class="text-white font-bold text-2xl">S²</span>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">Student Sphere</h1>
+      <p class="text-gray-500 text-sm mt-1">Create your student account</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-6">Create an account</h2>
+
+      <%- include('../partials/flash') %>
+
+      <form method="POST" action="/register" enctype="multipart/form-data" class="space-y-5">
+
+        <!-- Profile picture preview -->
+        <div class="flex flex-col items-center gap-3">
+          <div id="avatar-preview" class="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary-400 transition-colors">
+            <span class="text-gray-400 text-sm text-center px-2">Photo<br/>(optional)</span>
+          </div>
+          <input type="file" id="profile_picture" name="profile_picture" accept="image/*" class="hidden" />
+          <button type="button" onclick="document.getElementById('profile_picture').click()"
+                  class="text-xs text-primary-600 hover:underline">
+            Upload profile picture
+          </button>
+        </div>
+
+        <div>
+          <label class="form-label" for="name">Full name</label>
+          <input type="text" id="name" name="name" required autocomplete="name"
+                 class="form-input" placeholder="Jane Doe" minlength="2" maxlength="100" />
+        </div>
+
+        <div>
+          <label class="form-label" for="email">Email address</label>
+          <input type="email" id="email" name="email" required autocomplete="email"
+                 class="form-input" placeholder="you@example.com" />
+        </div>
+
+        <div>
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" name="password" required autocomplete="new-password"
+                 class="form-input" placeholder="At least 8 characters" minlength="8" />
+        </div>
+
+        <div>
+          <label class="form-label" for="confirm_password">Confirm password</label>
+          <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password"
+                 class="form-input" placeholder="Re-enter your password" />
+        </div>
+
+        <p class="text-xs text-gray-400 bg-gray-50 rounded-lg p-3">
+          Student accounts are self-registered. Lecturer and Mentor accounts are created by an administrator.
+        </p>
+
+        <button type="submit" class="btn-primary w-full justify-center py-2.5 text-base">
+          Create account
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-gray-500">
+        Already have an account?
+        <a href="/login" class="text-primary-600 font-medium hover:underline">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Profile picture preview
+  const input   = document.getElementById('profile_picture');
+  const preview = document.getElementById('avatar-preview');
+
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-full" />`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Password confirmation check
+  const form = document.querySelector('form');
+  form.addEventListener('submit', e => {
+    const pw  = document.getElementById('password').value;
+    const cpw = document.getElementById('confirm_password').value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      alert('Passwords do not match.');
+    }
+  });
+</script>
+
+</body></html>

@@ -1,0 +1,105 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+  <div class="flex items-center gap-3">
+    <a href="/lecturer/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900">Create Practice Quiz</h1>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="/lecturer/create-quiz" id="quiz-form" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Module</label>
+          <select name="module_id" required class="form-input" id="module-select">
+            <option value="">Select module…</option>
+            <% modules.forEach(m => { %>
+              <option value="<%= m.id %>" <%= selected_module === m.id ? 'selected' : '' %>>
+                <%= m.module_code %> — <%= m.module_name %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Topic Name</label>
+          <input type="text" name="topic_name" required class="form-input" placeholder="e.g. Recursion" maxlength="255" />
+        </div>
+      </div>
+
+      <div id="questions-container" class="space-y-6">
+        <!-- Questions added dynamically -->
+      </div>
+
+      <div class="flex gap-3">
+        <button type="button" id="add-question" class="btn-secondary">+ Add Question</button>
+        <button type="submit" class="btn-primary" id="submit-btn" disabled>Save Quiz</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let questionCount = 0;
+
+document.getElementById('add-question').addEventListener('click', () => {
+  questionCount++;
+  const container = document.getElementById('questions-container');
+  const div = document.createElement('div');
+  div.className = 'p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3';
+  div.id = `q-${questionCount}`;
+  div.innerHTML = `
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-semibold text-gray-700">Question ${questionCount}</span>
+      <button type="button" onclick="removeQuestion(${questionCount})" class="text-xs text-red-500 hover:underline">Remove</button>
+    </div>
+    <textarea name="questions[${questionCount-1}][question_text]" required rows="2"
+              class="form-input" placeholder="Enter question text…"></textarea>
+    <div class="grid grid-cols-2 gap-2">
+      ${['A','B','C','D'].map(opt => `
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-gray-600 w-4">${opt}</span>
+          <input type="text" name="questions[${questionCount-1}][option_${opt.toLowerCase()}]" required
+                 class="form-input text-sm" placeholder="Option ${opt}" />
+        </div>
+      `).join('')}
+    </div>
+    <div>
+      <label class="form-label">Correct Answer</label>
+      <select name="questions[${questionCount-1}][correct_option]" required class="form-input w-auto">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+    </div>
+  `;
+  container.appendChild(div);
+  document.getElementById('submit-btn').disabled = false;
+});
+
+function removeQuestion(n) {
+  const el = document.getElementById(`q-${n}`);
+  if (el) el.remove();
+  if (document.getElementById('questions-container').children.length === 0) {
+    document.getElementById('submit-btn').disabled = true;
+  }
+}
+
+// Convert questions[] to proper array before POST
+document.getElementById('quiz-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  // Re-index questions for clean array submission
+  const containers = document.querySelectorAll('#questions-container > div');
+  containers.forEach((div, i) => {
+    div.querySelectorAll('[name]').forEach(el => {
+      // Replace old index with new sequential index
+      el.name = el.name.replace(/questions\[\d+\]/, `questions[${i}]`);
+    });
+  });
+  this.submit();
+});
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,87 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900">System Analytics</h1>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Activity over 30 days -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-700 mb-4">Quiz Activity (Last 30 Days)</h2>
+      <canvas id="activityChart" height="200"></canvas>
+    </div>
+
+    <!-- Role distribution -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-700 mb-4">User Role Distribution</h2>
+      <canvas id="roleChart" height="200"></canvas>
+    </div>
+
+    <!-- Top modules by enrollment -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-700 mb-4">Top Modules by Enrollments</h2>
+      <canvas id="modulesChart" height="200"></canvas>
+    </div>
+
+    <!-- Average scores per module -->
+    <div class="card">
+      <h2 class="text-base font-semibold text-gray-700 mb-4">Average Quiz Scores by Module</h2>
+      <canvas id="scoresChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#84cc16'];
+
+// Activity chart
+const actData  = <%- JSON.stringify(activityByDay) %>;
+new Chart(document.getElementById('activityChart'), {
+  type: 'line',
+  data: {
+    labels: actData.map(d => new Date(d.day).toLocaleDateString('en-GB', {month:'short',day:'numeric'})),
+    datasets: [{ label: 'Quiz Attempts', data: actData.map(d => d.quiz_count),
+      borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true, tension: 0.4 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+// Role distribution
+const roleData = <%- JSON.stringify(roleDistrib) %>;
+new Chart(document.getElementById('roleChart'), {
+  type: 'doughnut',
+  data: {
+    labels: roleData.map(r => r.role.charAt(0).toUpperCase() + r.role.slice(1)),
+    datasets: [{ data: roleData.map(r => r.count), backgroundColor: COLORS }]
+  },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+
+// Top modules
+const modData  = <%- JSON.stringify(topModules) %>;
+new Chart(document.getElementById('modulesChart'), {
+  type: 'bar',
+  data: {
+    labels: modData.map(m => m.module_name),
+    datasets: [{ label: 'Enrollments', data: modData.map(m => m.enrollments),
+      backgroundColor: '#6366f1', borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+// Avg scores
+const scoreData = <%- JSON.stringify(avgScores) %>;
+new Chart(document.getElementById('scoresChart'), {
+  type: 'bar',
+  data: {
+    labels: scoreData.map(s => s.module_name),
+    datasets: [{ label: 'Avg Score %', data: scoreData.map(s => s.avg_score),
+      backgroundColor: scoreData.map(s => s.avg_score >= 70 ? '#10b981' : s.avg_score >= 50 ? '#f59e0b' : '#ef4444'),
+      borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+});
+</script>
+
+<%- include('../partials/footer') %>

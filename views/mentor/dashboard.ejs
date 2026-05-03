@@ -1,0 +1,86 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Mentor Dashboard</h1>
+    <p class="text-sm text-gray-500">Welcome back, <%= user.name %>!</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card">
+      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Assigned Modules</p>
+      <p class="text-3xl font-bold text-gray-900 mt-1"><%= stats.moduleCount %></p>
+    </div>
+    <div class="card">
+      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Sessions</p>
+      <p class="text-3xl font-bold text-purple-600 mt-1"><%= stats.sessionCount %></p>
+    </div>
+    <div class="card">
+      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Upcoming Sessions</p>
+      <p class="text-3xl font-bold text-blue-600 mt-1"><%= stats.upcomingCount %></p>
+    </div>
+    <div class="card">
+      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Avg Rating</p>
+      <div class="flex items-baseline gap-2 mt-1">
+        <p class="text-3xl font-bold text-yellow-500"><%= stats.avgRating ? parseFloat(stats.avgRating).toFixed(1) : '—' %></p>
+        <span class="text-yellow-400 text-xl">★</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modules -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800">My Modules</h2>
+      <a href="/mentor/sessions" class="btn-primary text-xs">Manage Sessions</a>
+    </div>
+    <% if (!modules.length) { %>
+      <p class="text-gray-400 text-sm text-center py-8">You haven't been assigned to any modules yet.</p>
+    <% } else { %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <% modules.forEach(m => { %>
+      <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <%= m.colour %>"></div>
+          <p class="text-sm font-semibold text-gray-800 truncate"><%= m.module_name %></p>
+        </div>
+        <p class="text-xs text-gray-400"><%= m.module_code %></p>
+        <div class="flex gap-2 pt-1">
+          <a href="/mentor/analytics/<%= m.id %>" class="btn-secondary text-xs flex-1 text-center">Analytics</a>
+          <a href="/mentor/my-notes?module_id=<%= m.id %>" class="btn-secondary text-xs flex-1 text-center">Notes</a>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Upcoming sessions quick view -->
+  <% if (upcomingSessions.length) { %>
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Upcoming Sessions</h2>
+    <div class="space-y-2">
+      <% upcomingSessions.forEach(s => { %>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div>
+          <p class="text-sm font-medium text-gray-700"><%= s.session_title %></p>
+          <p class="text-xs text-gray-400">
+            <%= new Date(s.session_date).toLocaleDateString('en-GB', {day:'numeric', month:'short'}) %>
+            <%= s.session_time ? 'at ' + s.session_time.slice(0,5) : '' %>
+            · <%= s.module_name %>
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-400"><%= s.rsvp_count %> RSVP</span>
+          <a href="/mentor/sessions/<%= s.id %>/rsvps" class="btn-secondary text-xs">RSVPs</a>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>
