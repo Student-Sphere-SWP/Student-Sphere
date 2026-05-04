@@ -9,8 +9,8 @@
     <p class="text-sm text-gray-500">Topic: <strong><%= topicName %></strong> · <%= questions.length %> questions</p>
   </div>
 
-  <form method="POST" action="/student/submit-quiz">
-    <input type="hidden" name="questions_json" value="<%= JSON.stringify(questions) %>" />
+  <form method="POST" action="/student/submit-quiz" id="quiz-form">
+    <input type="hidden" name="questions_json" id="questions_json" />
     <input type="hidden" name="pdf_note_id" value="<%= pdfNoteId %>" />
     <input type="hidden" name="module_id" value="<%= moduleId %>" />
     <input type="hidden" name="topic_name" value="<%= topicName %>" />
@@ -23,12 +23,11 @@
         </p>
         <div class="space-y-2">
           <% ['A','B','C','D'].forEach(letter => { %>
-          <% const optKey = 'option_' + letter; %>
-          <% if (q[optKey]) { %>
+          <% if (q.options && q.options[letter]) { %>
           <label class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 cursor-pointer transition-colors">
             <input type="radio" name="answer_<%= idx %>" value="<%= letter %>" required
                    class="text-primary-600 focus:ring-primary-500" />
-            <span class="text-sm text-gray-700"><strong class="text-primary-600 mr-1"><%= letter %>.</strong> <%= q[optKey] %></span>
+            <span class="text-sm text-gray-700"><strong class="text-primary-600 mr-1"><%= letter %>.</strong> <%= q.options[letter] %></span>
           </label>
           <% } %>
           <% }) %>
@@ -38,9 +37,30 @@
     </div>
 
     <div class="flex justify-end mt-6">
-      <button type="submit" class="btn-primary px-8">Submit Quiz</button>
+      <button type="submit" id="submit-btn" class="btn-primary px-8">Submit Quiz</button>
     </div>
   </form>
 </div>
+
+<!-- Loading overlay -->
+<div id="loading-overlay" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-90">
+  <div class="flex flex-col items-center gap-4">
+    <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+    <p id="loading-msg" class="text-gray-700 font-medium text-lg">Submitting your quiz...</p>
+    <p class="text-gray-400 text-sm">Please wait</p>
+  </div>
+</div>
+
+<script>
+  // Safely inject questions data - no HTML attribute encoding issues
+  const QUESTIONS = <%- JSON.stringify(questions) %>;
+
+  // Populate hidden field before submit
+  document.getElementById('quiz-form').addEventListener('submit', function() {
+    document.getElementById('questions_json').value = JSON.stringify(QUESTIONS);
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('loading-overlay').classList.remove('hidden');
+  });
+</script>
 
 <%- include('../partials/footer') %>

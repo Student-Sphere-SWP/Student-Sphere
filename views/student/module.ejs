@@ -151,13 +151,22 @@
   </div>
 </div>
 
+<!-- Loading overlay for quiz generation -->
+<div id="quiz-loading" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-90">
+  <div class="flex flex-col items-center gap-4">
+    <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+    <p class="text-gray-700 font-medium text-lg">Generating your quiz with AI...</p>
+    <p class="text-gray-400 text-sm">This may take up to 30 seconds</p>
+  </div>
+</div>
+
 <script>
   // Scroll chat
   const chat = document.getElementById('chat-messages');
   if (chat) chat.scrollTop = chat.scrollHeight;
 
-  // Auto-refresh every 10 seconds
-  setTimeout(() => location.reload(), 10000);
+  // Auto-refresh every 10 seconds (cancelled if quiz generation is in progress)
+  let autoRefresh = setTimeout(() => location.reload(), 10000);
 
   function openQuizModal(pdfId, topic) {
     document.getElementById('modal-pdf-id').value = pdfId;
@@ -170,9 +179,11 @@
 
   // Show loading state during quiz generation
   document.getElementById('quiz-gen-form').addEventListener('submit', () => {
+    clearTimeout(autoRefresh); // prevent auto-refresh from killing the request
     const btn = document.getElementById('gen-btn');
     btn.disabled = true;
     btn.textContent = 'Generating…';
+    document.getElementById('quiz-loading').classList.remove('hidden');
   });
 </script>
 

@@ -208,6 +208,8 @@ router.post('/generate-quiz', studentOnly, async (req, res) => {
   const count = parseInt(questions_count) || 10;
 
   try {
+    console.log(`[QUIZ] Starting quiz generation for PDF: ${pdf_note_id}`);
+    
     // Get PDF details and check enrollment
     const { rows } = await pool.query(
       `SELECT pn.*, m.id AS module_id FROM pdf_note pn
@@ -223,12 +225,17 @@ router.post('/generate-quiz', studentOnly, async (req, res) => {
     }
 
     const pdf = rows[0];
+    console.log(`[QUIZ] PDF found: ${pdf.topic_name}`);
 
     // Extract text from the PDF
+    console.log(`[QUIZ] Extracting text from: ${pdf.file_url}`);
     const text = await extractPdfText(pdf.file_url);
+    console.log(`[QUIZ] Extracted ${text.length} characters`);
 
     // Generate questions via Gemini
+    console.log(`[QUIZ] Calling Gemini to generate ${count} questions`);
     const questions = await generateQuiz(text, count);
+    console.log(`[QUIZ] Successfully generated ${questions.length} questions`);
 
     // Temporarily store quiz data in session for the quiz page
     req.session.pendingQuiz = {
@@ -238,6 +245,7 @@ router.post('/generate-quiz', studentOnly, async (req, res) => {
       topicName:  pdf.topic_name
     };
 
+    console.log(`[QUIZ] Rendering quiz page with ${questions.length} questions`);
     res.render('student/quiz', {
       title:    `Quiz: ${pdf.topic_name}`,
       user:     req.user,
@@ -255,17 +263,24 @@ router.post('/generate-quiz', studentOnly, async (req, res) => {
 
 // ── Submit AI Quiz ─────────────────────────────────────────────────────────────
 router.post('/submit-quiz', studentOnly, async (req, res) => {
-  const { pdf_note_id, module_id, topic_name, questions_json, answers_json } = req.body;
+  const { pdf_note_id, module_id, topic_name, questions_json } = req.body;
 
   try {
     const questions = JSON.parse(questions_json);
-    const answers   = JSON.parse(answers_json);
+    // Collect answers from individual form fields (answer_0, answer_1, ...)
+    const answers = questions.map((_, i) => req.body[`answer_${i}`] || null);
 
     let correct = 0;
-    questions.forEach((q, i) => {
-      if (answers[i] && answers[i].toUpperCase() === q.correct.toUpperCase()) {
-        correct++;
-      }
+    const results = questions.map((q, i) => {
+      const userAnswer = answers[i] || null;
+      const isCorrect = userAnswer && userAnswer.toUpperCase() === q.correct.toUpperCase();
+      if (isCorrect) correct++;
+      return {
+        question:      q.question,
+        userAnswer:    userAnswer ? `${userAnswer}. ${q.options[userAnswer.toUpperCase()]}` : 'No answer',
+        correctAnswer: `${q.correct}. ${q.options[q.correct.toUpperCase()]}`,
+        correct:       !!isCorrect
+      };
     });
 
     const scorePct = Math.round((correct / questions.length) * 100 * 10) / 10;
@@ -291,13 +306,12 @@ router.post('/submit-quiz', studentOnly, async (req, res) => {
     res.render('student/quiz-result', {
       title:     'Quiz Results',
       user:      req.user,
-      score:     scorePct,
+      score:     correct,
       correct,
       total:     questions.length,
       topicName: topic_name,
       moduleId:  module_id,
-      questions,
-      answers
+      results
     });
   } catch (err) {
     console.error('Submit quiz error:', err);

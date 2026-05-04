@@ -65,10 +65,10 @@
       <% upcomingSessions.forEach(s => { %>
       <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
         <div>
-          <p class="text-sm font-medium text-gray-700"><%= s.session_title %></p>
+          <p class="text-sm font-medium text-gray-700"><%= s.topic %></p>
           <p class="text-xs text-gray-400">
-            <%= new Date(s.session_date).toLocaleDateString('en-GB', {day:'numeric', month:'short'}) %>
-            <%= s.session_time ? 'at ' + s.session_time.slice(0,5) : '' %>
+            <%= new Date(s.date_time).toLocaleDateString('en-GB', {day:'numeric', month:'short'}) %>
+            at <%= new Date(s.date_time).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) %>
             · <%= s.module_name %>
           </p>
         </div>

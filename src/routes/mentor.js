@@ -35,7 +35,10 @@ router.get('/dashboard', mentorOnly, async (req, res) => {
         'SELECT COUNT(*) AS count FROM tutorial_session WHERE tutor_id = $1', [req.user.id]
       ),
       pool.query(
-        'SELECT COUNT(*) AS count FROM tutorial_session WHERE tutor_id = $1 AND date_time >= NOW()',
+        `SELECT ts.id, ts.topic, ts.date_time, ts.capacity, m.module_name,
+          (SELECT COUNT(*) FROM session_rsvp WHERE session_id = ts.id) as rsvp_count
+         FROM tutorial_session ts JOIN module m ON m.id = ts.module_id
+         WHERE ts.tutor_id = $1 AND ts.date_time >= NOW() ORDER BY ts.date_time ASC LIMIT 5`,
         [req.user.id]
       ),
       pool.query(
@@ -45,13 +48,14 @@ router.get('/dashboard', mentorOnly, async (req, res) => {
     ]);
 
     res.render('mentor/dashboard', {
-      title:       'Mentor Dashboard',
-      user:        req.user,
-      modules:     modules.rows,
+      title:           'Mentor Dashboard',
+      user:            req.user,
+      modules:         modules.rows,
+      upcomingSessions: upcomingSessions.rows,
       stats: {
         moduleCount:    modules.rows.length,
         sessionCount:   parseInt(sessionsCount.rows[0].count),
-        upcomingCount:  parseInt(upcomingSessions.rows[0].count),
+        upcomingCount:  upcomingSessions.rows.length,
         avgRating:      avgRating.rows[0].avg,
         ratingCount:    parseInt(avgRating.rows[0].count)
       }
