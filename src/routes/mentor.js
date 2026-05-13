@@ -149,20 +149,30 @@ router.post('/upload-note',
 // ── My notes ──────────────────────────────────────────────────────────────────
 router.get('/my-notes', mentorOnly, async (req, res) => {
   try {
+    const filterModuleId = req.query.module_id || null;
+    const notesQuery = filterModuleId
+      ? pool.query(
+          `SELECT pn.*, m.module_name FROM pdf_note pn JOIN module m ON m.id = pn.module_id
+           WHERE pn.uploaded_by_user_id = $1 AND pn.is_tutor_note = true AND pn.deleted_at IS NULL
+             AND pn.module_id = $2
+           ORDER BY pn.created_at DESC`,
+          [req.user.id, filterModuleId]
+        )
+      : pool.query(
+          `SELECT pn.*, m.module_name FROM pdf_note pn JOIN module m ON m.id = pn.module_id
+           WHERE pn.uploaded_by_user_id = $1 AND pn.is_tutor_note = true AND pn.deleted_at IS NULL
+           ORDER BY pn.created_at DESC`,
+          [req.user.id]
+        );
     const [notes, modules] = await Promise.all([
-      pool.query(
-        `SELECT pn.*, m.module_name FROM pdf_note pn JOIN module m ON m.id = pn.module_id
-         WHERE pn.uploaded_by_user_id = $1 AND pn.is_tutor_note = true AND pn.deleted_at IS NULL
-         ORDER BY pn.created_at DESC`,
-        [req.user.id]
-      ),
+      notesQuery,
       pool.query(
         `SELECT m.* FROM user_module um JOIN module m ON m.id = um.module_id
          WHERE um.user_id = $1 AND m.deleted_at IS NULL ORDER BY m.module_name`,
         [req.user.id]
       )
     ]);
-    res.render('mentor/my-notes', { title: 'My Notes', user: req.user, notes: notes.rows, modules: modules.rows });
+    res.render('mentor/my-notes', { title: 'My Notes', user: req.user, notes: notes.rows, modules: modules.rows, filterModuleId });
   } catch (err) {
     console.error(err);
     req.session.error = 'Failed to load notes.';
