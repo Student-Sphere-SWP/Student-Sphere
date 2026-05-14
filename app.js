@@ -42,11 +42,13 @@ app.use((req, res, next) => {
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/',         require('./src/routes/auth'));
-app.use('/admin',    require('./src/routes/admin'));
-app.use('/lecturer', require('./src/routes/lecturer'));
-app.use('/student',  require('./src/routes/student'));
-app.use('/mentor',   require('./src/routes/mentor'));
+app.use('/',                  require('./src/routes/auth'));
+app.use('/admin',             require('./src/routes/admin'));
+app.use('/lecturer',          require('./src/routes/lecturer'));
+app.use('/student',           require('./src/routes/student'));
+app.use('/mentor',            require('./src/routes/mentor'));
+app.use('/social',            require('./src/routes/social'));
+app.use('/student/peer-sessions', require('./src/routes/peerSessions'));
 
 // ── Root redirect ─────────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.redirect('/login'));

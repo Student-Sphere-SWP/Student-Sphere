@@ -901,5 +901,138 @@ router.post('/profile',
   }
 );
 
+// ── Improvement Tracking (score trajectory + class average) ─────────────────
+router.get('/improvement', studentOnly, async (req, res) => {
+  try {
+    const moduleId = req.query.module_id || null;
+
+    // My attempts per week per topic
+    const myTrajectory = await pool.query(
+      `SELECT
+         topic_name,
+         module_id,
+         m.module_name,
+         DATE_TRUNC('week', attempted_at)     AS week,
+         ROUND(AVG(score_percentage), 1)      AS avg_score,
+         COUNT(*)                             AS attempt_count
+       FROM ai_quiz_attempt a
+       JOIN module m ON m.id = a.module_id
+       WHERE a.student_id=$1
+         ${moduleId ? 'AND a.module_id=$2' : ''}
+       GROUP BY topic_name, a.module_id, m.module_name, DATE_TRUNC('week', attempted_at)
+       ORDER BY a.module_id, topic_name, week ASC`,
+      moduleId ? [req.user.id, moduleId] : [req.user.id]
+    );
+
+    // Class average per topic (same module filter, all students, anonymised)
+    const classAvg = await pool.query(
+      `SELECT
+         topic_name,
+         module_id,
+         ROUND(AVG(score_percentage), 1) AS class_avg,
+         COUNT(DISTINCT student_id)      AS student_count
+       FROM ai_quiz_attempt
+       WHERE 1=1
+         ${moduleId ? 'AND module_id=$1' : ''}
+       GROUP BY topic_name, module_id`,
+      moduleId ? [moduleId] : []
+    );
+
+    // Enrolled modules for filter dropdown
+    const { rows: modules } = await pool.query(
+      `SELECT m.* FROM student_enrollment se JOIN module m ON m.id = se.module_id
+       WHERE se.student_id=$1 AND m.deleted_at IS NULL ORDER BY m.module_name`,
+      [req.user.id]
+    );
+
+    // Build a map: topic → { weeks: [{week, avg_score}], classAvg }
+    const trajectoryMap = {};
+    for (const row of myTrajectory.rows) {
+      const key = `${row.module_id}:${row.topic_name}`;
+      if (!trajectoryMap[key]) {
+        trajectoryMap[key] = {
+          topic_name: row.topic_name,
+          module_name: row.module_name,
+          module_id: row.module_id,
+          weeks: [],
+          class_avg: null
+        };
+      }
+      trajectoryMap[key].weeks.push({ week: row.week, avg_score: parseFloat(row.avg_score) });
+    }
+    for (const row of classAvg.rows) {
+      const key = `${row.module_id}:${row.topic_name}`;
+      if (trajectoryMap[key]) trajectoryMap[key].class_avg = parseFloat(row.class_avg);
+    }
+
+    res.render('student/improvement', {
+      title: 'My Improvement',
+      user: req.user,
+      topics: Object.values(trajectoryMap),
+      modules,
+      selectedModuleId: moduleId
+    });
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to load improvement data.';
+    res.redirect('/student/dashboard');
+  }
+});
+
+// ── On-Demand Practice: browse notes by keyword/topic ────────────────────────
+router.get('/practice', studentOnly, async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    const moduleId = req.query.module_id || null;
+
+    const { rows: modules } = await pool.query(
+      `SELECT m.* FROM student_enrollment se JOIN module m ON m.id = se.module_id
+       WHERE se.student_id=$1 AND m.deleted_at IS NULL ORDER BY m.module_name`,
+      [req.user.id]
+    );
+
+    let notes = [];
+    if (q.length >= 2 || moduleId) {
+      const params = [req.user.id];
+      let conditions = `pn.deleted_at IS NULL AND pn.is_tutor_note = false`;
+      // Only notes from modules the student is enrolled in
+      conditions += ` AND EXISTS(
+        SELECT 1 FROM student_enrollment se WHERE se.student_id=$1 AND se.module_id = pn.module_id
+      )`;
+      if (q) {
+        params.push(`%${q}%`);
+        conditions += ` AND pn.topic_name ILIKE $${params.length}`;
+      }
+      if (moduleId) {
+        params.push(moduleId);
+        conditions += ` AND pn.module_id=$${params.length}`;
+      }
+      const result = await pool.query(
+        `SELECT pn.*, m.module_name, m.colour,
+           (SELECT ROUND(AVG(a.score_percentage),1) FROM ai_quiz_attempt a
+            WHERE a.pdf_note_id = pn.id AND a.student_id=$1) AS my_avg
+         FROM pdf_note pn JOIN module m ON m.id = pn.module_id
+         WHERE ${conditions}
+         ORDER BY pn.topic_name ASC LIMIT 50`,
+        params
+      );
+      notes = result.rows;
+    }
+
+    res.render('student/practice', {
+      title: 'On-Demand Practice',
+      user: req.user,
+      notes,
+      modules,
+      q,
+      selectedModuleId: moduleId
+    });
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to load practice notes.';
+    res.redirect('/student/dashboard');
+  }
+});
+
 module.exports = router;
 

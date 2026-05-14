@@ -1,0 +1,107 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-2xl mx-auto flex flex-col" style="height: calc(100vh - 8rem)">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-4 flex-shrink-0">
+    <a href="/social/messages" class="text-gray-400 hover:text-gray-600">← Back</a>
+    <% if (partner.profile_picture) { %>
+      <img src="<%= partner.profile_picture %>" class="w-9 h-9 rounded-full object-cover" />
+    <% } else { %>
+      <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+        <%= partner.name.charAt(0).toUpperCase() %>
+      </div>
+    <% } %>
+    <div>
+      <h1 class="text-base font-bold text-gray-900"><%= partner.name %></h1>
+    </div>
+  </div>
+
+  <!-- Message thread -->
+  <div id="thread" class="flex-1 overflow-y-auto space-y-2 pr-1 mb-4">
+    <% if (messages.length === 0) { %>
+      <p class="text-center text-gray-400 text-sm py-8">No messages yet. Say hi! 👋</p>
+    <% } %>
+    <% messages.forEach(m => { %>
+    <% const mine = m.sender_id == user.id; %>
+    <div class="flex <%= mine ? 'justify-end' : 'justify-start' %>">
+      <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-sm
+                  <%= mine ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-white border border-gray-100 text-gray-800 rounded-bl-sm' %>
+                  shadow-sm"
+           data-id="<%= m.id %>"
+           data-ts="<%= new Date(m.created_at).toISOString() %>">
+        <p class="whitespace-pre-wrap break-words"><%= m.content %></p>
+        <p class="text-[10px] mt-1 <%= mine ? 'text-indigo-200' : 'text-gray-400' %> text-right">
+          <%= new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) %>
+        </p>
+      </div>
+    </div>
+    <% }) %>
+    <div id="scroll-anchor"></div>
+  </div>
+
+  <!-- Compose -->
+  <div class="flex-shrink-0">
+    <form id="send-form" method="POST" action="/social/messages/<%= partner.id %>" class="flex gap-2">
+      <textarea name="content" id="msg-input" rows="1"
+                class="form-input flex-1 resize-none"
+                placeholder="Type a message…" maxlength="2000"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.getElementById('send-form').submit();}"></textarea>
+      <button type="submit" class="btn-primary px-5 flex-shrink-0">Send</button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  const thread  = document.getElementById('thread');
+  const anchor  = document.getElementById('scroll-anchor');
+  const partner = '<%= partner.id %>';
+
+  // Scroll to bottom on load
+  anchor.scrollIntoView();
+
+  // Track already-rendered message IDs to prevent duplicate rendering
+  // (timestamps lose microsecond precision through JSON, so ID-based dedup is required)
+  const seenIds = new Set(
+    Array.from(thread.querySelectorAll('[data-id]')).map(el => el.dataset.id)
+  );
+
+  // Track last message timestamp for the poll ?after= param
+  const msgs = thread.querySelectorAll('[data-ts]');
+  let lastTs = msgs.length ? msgs[msgs.length - 1].dataset.ts : new Date(0).toISOString();
+
+  function renderMessage(m) {
+    if (seenIds.has(m.id)) return; // already rendered — skip
+    seenIds.add(m.id);
+
+    const mine = m.sender_id === '<%= user.id %>';
+    const wrap = document.createElement('div');
+    wrap.className = 'flex ' + (mine ? 'justify-end' : 'justify-start');
+    const time = new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    wrap.innerHTML = `<div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-sm shadow-sm"
+        data-id="${m.id}"
+        data-ts="${m.created_at}">
+      <p class="whitespace-pre-wrap break-words ${mine ? 'text-white' : 'text-gray-800'}">${m.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>
+      <p class="text-[10px] mt-1 ${mine ? 'text-indigo-200' : 'text-gray-400'} text-right">${time}</p>
+    </div>`;
+    wrap.firstElementChild.className += ` ${mine ? 'bg-indigo-600 rounded-br-sm' : 'bg-white border border-gray-100 rounded-bl-sm'}`;
+    anchor.before(wrap);
+    anchor.scrollIntoView({ behavior: 'smooth' });
+    lastTs = m.created_at;
+  }
+
+  // Poll every 3 seconds
+  setInterval(async () => {
+    try {
+      const r = await fetch(`/social/messages/${partner}/poll?after=${encodeURIComponent(lastTs)}`);
+      const data = await r.json();
+      data.messages.forEach(renderMessage);
+    } catch {}
+  }, 3000);
+})();
+</script>
+
+<%- include('../partials/footer') %>

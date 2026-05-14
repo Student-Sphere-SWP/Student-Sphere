@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS module (
   created_at  TIMESTAMPTZ  DEFAULT NOW(),
   deleted_at  TIMESTAMPTZ
 );
-
 CREATE INDEX IF NOT EXISTS idx_module_code ON module(module_code) WHERE deleted_at IS NULL;
 
 -- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -497,4 +496,5 @@ VALUES
   ('fffffff1-ffff-ffff-ffff-ffffffffff03', '11111111-1111-1111-1111-111111111201', 'reset-token-lecturer1-001', NOW() + INTERVAL '20 minutes'),
   ('fffffff1-ffff-ffff-ffff-ffffffffff04', '11111111-1111-1111-1111-111111111301', 'reset-token-mentor1-001', NOW() + INTERVAL '40 minutes'),
   ('fffffff1-ffff-ffff-ffff-ffffffffff05', '11111111-1111-1111-1111-111111111101', 'reset-token-admin2-001', NOW() + INTERVAL '35 minutes')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
+

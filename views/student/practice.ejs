@@ -1,0 +1,82 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <div>
+    <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">On-Demand Practice</h1>
+    <p class="text-sm text-gray-500">Search for PDF notes by topic and instantly generate a quiz — no waiting for a lecturer.</p>
+  </div>
+
+  <!-- Search form -->
+  <div class="card">
+    <form method="GET" action="/student/practice" class="space-y-3">
+      <div class="flex gap-2">
+        <input type="text" name="q" value="<%= q %>" placeholder="Search topics, e.g. Recursion, Supply & Demand…"
+               class="form-input flex-1" />
+        <button type="submit" class="btn-primary px-5">Search</button>
+      </div>
+      <div class="flex items-center gap-3">
+        <label class="text-sm text-gray-600 flex-shrink-0">Module:</label>
+        <select name="module_id" onchange="this.form.submit()" class="form-input text-sm py-1.5 flex-1">
+          <option value="">All my modules</option>
+          <% modules.forEach(m => { %>
+            <option value="<%= m.id %>" <%= selectedModuleId == m.id ? 'selected' : '' %>><%= m.module_name %></option>
+          <% }) %>
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results -->
+  <% if ((q || selectedModuleId) && notes.length === 0) { %>
+    <div class="card text-center py-8 text-gray-400">
+      No notes found. Try a different keyword or module.
+    </div>
+  <% } %>
+
+  <% if (notes.length > 0) { %>
+  <div class="space-y-3">
+    <p class="text-sm text-gray-500"><%= notes.length %> note<%= notes.length > 1 ? 's' : '' %> found</p>
+    <% notes.forEach(n => { %>
+    <div class="card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full" style="background: <%= n.colour || '#6366F1' %>"></span>
+          <p class="text-sm font-semibold text-gray-800 truncate"><%= n.topic_name %></p>
+        </div>
+        <p class="text-xs text-gray-400 mt-0.5"><%= n.module_name %></p>
+        <% if (n.my_avg !== null) { %>
+        <div class="mt-2 flex items-center gap-2">
+          <div class="w-24 bg-gray-100 rounded-full h-1.5">
+            <div class="h-1.5 rounded-full <%= parseFloat(n.my_avg) >= 70 ? 'bg-green-500' : parseFloat(n.my_avg) >= 50 ? 'bg-amber-400' : 'bg-red-400' %>"
+                 style="width: <%= n.my_avg %>%"></div>
+          </div>
+          <span class="text-xs text-gray-500">Your avg: <strong><%= n.my_avg %>%</strong></span>
+        </div>
+        <% } else { %>
+          <p class="text-xs text-gray-400 mt-1">Not attempted yet</p>
+        <% } %>
+      </div>
+      <div class="flex gap-2 text-xs flex-shrink-0">
+        <a href="/student/quiz/<%= n.id %>" class="btn-primary">🎯 Practice Now</a>
+        <a href="<%= n.file_url %>" target="_blank" class="btn-secondary">📄 View PDF</a>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <% if (!q && !selectedModuleId) { %>
+  <div class="card text-center py-10">
+    <p class="text-4xl mb-3">🔍</p>
+    <p class="text-gray-600 font-medium">Search for a topic to get started</p>
+    <p class="text-sm text-gray-400 mt-1">Type any keyword from your study notes above to find matching PDFs and jump straight into a quiz.</p>
+  </div>
+  <% } %>
+
+</div>
+
+<%- include('../partials/footer') %>

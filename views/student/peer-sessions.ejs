@@ -1,0 +1,137 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-5xl mx-auto space-y-6">
+
+  <div>
+    <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">Study Sessions</h1>
+    <p class="text-sm text-gray-500">Peer-organised study groups for your enrolled modules.</p>
+  </div>
+
+  <!-- Create a session -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Create a Study Session</h2>
+    <form method="POST" action="/student/peer-sessions" class="space-y-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Module</label>
+          <select name="module_id" class="form-input" required>
+            <option value="">Select module…</option>
+            <% modules.forEach(m => { %>
+            <option value="<%= m.id %>"><%= m.module_name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Title</label>
+          <input type="text" name="title" class="form-input" required maxlength="255" placeholder="e.g. Exam cram — Chapter 5" />
+        </div>
+        <div>
+          <label class="form-label">Date & Time</label>
+          <input type="datetime-local" name="date_time" class="form-input" required />
+        </div>
+        <div>
+          <label class="form-label">Max Participants</label>
+          <input type="number" name="max_participants" class="form-input" min="2" max="100" value="10" required />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Location / Meeting Link (optional)</label>
+        <input type="text" name="meeting_link_or_location" class="form-input" maxlength="500" placeholder="e.g. Library Room 4 or https://meet.google.com/…" />
+      </div>
+      <div>
+        <label class="form-label">Description (optional)</label>
+        <textarea name="description" rows="2" class="form-input" maxlength="1000" placeholder="What will you cover?"></textarea>
+      </div>
+      <div class="pt-1">
+        <button type="submit" class="btn-primary">Create Session</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Upcoming sessions from enrolled modules -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Upcoming Sessions</h2>
+    <% if (sessions.length === 0) { %>
+      <p class="text-gray-400 text-sm text-center py-6">No upcoming peer sessions for your modules.</p>
+    <% } else { %>
+    <div class="space-y-3">
+      <% sessions.forEach(s => { %>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background: <%= s.colour || '#6366F1' %>"></span>
+            <p class="text-sm font-semibold text-gray-800 truncate"><%= s.title %></p>
+            <% if (s.host_id == user.id) { %>
+              <span class="badge bg-indigo-100 text-indigo-700">Host</span>
+            <% } %>
+          </div>
+          <p class="text-xs text-gray-500 mt-0.5">
+            <%= s.module_name %> · by <%= s.host_name %>
+          </p>
+          <p class="text-xs text-gray-500 mt-0.5">
+            📅 <%= new Date(s.date_time).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) %>
+            <% if (s.meeting_link_or_location) { %> · 📍 <%= s.meeting_link_or_location %><% } %>
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            <%= s.participant_count %>/<%= s.max_participants %> participants
+            <% if (s.description) { %> · <%= s.description.slice(0,80) %><%= s.description.length > 80 ? '…' : '' %><% } %>
+          </p>
+        </div>
+        <div class="flex gap-2 text-xs flex-shrink-0">
+          <% if (s.host_id == user.id) { %>
+            <form method="POST" action="/student/peer-sessions/<%= s.id %>/cancel"
+                  onsubmit="return confirm('Cancel this session?')">
+              <button class="btn-secondary text-red-500">Cancel Session</button>
+            </form>
+          <% } else if (s.joined) { %>
+            <form method="POST" action="/student/peer-sessions/<%= s.id %>/join?_method=DELETE">
+              <button class="btn-secondary">Leave</button>
+            </form>
+          <% } else { %>
+            <form method="POST" action="/student/peer-sessions/<%= s.id %>/join">
+              <button class="btn-primary" <%= parseInt(s.participant_count) >= s.max_participants ? 'disabled' : '' %>>
+                <%= parseInt(s.participant_count) >= s.max_participants ? 'Full' : 'Join' %>
+              </button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- My hosted sessions -->
+  <% if (myHosted.length > 0) { %>
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">My Hosted Sessions</h2>
+    <div class="space-y-2">
+      <% myHosted.forEach(s => { %>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl gap-3">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-gray-800 truncate"><%= s.title %></p>
+          <p class="text-xs text-gray-500">
+            <%= s.module_name %> ·
+            <%= new Date(s.date_time).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) %> ·
+            <%= s.participant_count %>/<%= s.max_participants %> joined ·
+            <span class="<%= s.status === 'cancelled' ? 'text-red-400' : 'text-green-600' %>"><%= s.status %></span>
+          </p>
+        </div>
+        <% if (s.status === 'active') { %>
+          <form method="POST" action="/student/peer-sessions/<%= s.id %>/cancel"
+                onsubmit="return confirm('Cancel this session?')">
+            <button class="btn-secondary text-xs text-red-500">Cancel</button>
+          </form>
+        <% } %>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,165 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div>
+    <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">Friends</h1>
+    <p class="text-sm text-gray-500">Connect with fellow students, send messages, and build your study network.</p>
+  </div>
+
+  <!-- Search -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-3">Find Students</h2>
+    <form method="GET" action="/social/friends" class="flex gap-2">
+      <input type="text" name="q" value="<%= q %>" placeholder="Search by name or email…"
+             class="form-input flex-1" minlength="2" />
+      <button type="submit" class="btn-primary px-5">Search</button>
+    </form>
+
+    <% if (q && searchResults.length === 0) { %>
+      <p class="text-sm text-gray-400 mt-3">No students found for "<%= q %>".</p>
+    <% } %>
+    <% if (searchResults.length > 0) { %>
+    <div class="mt-4 space-y-2">
+      <% searchResults.forEach(s => { %>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+        <div class="flex items-center gap-3">
+          <% if (s.profile_picture) { %>
+            <img src="<%= s.profile_picture %>" class="w-9 h-9 rounded-full object-cover" />
+          <% } else { %>
+            <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
+              <%= s.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+          <span class="text-sm font-medium text-gray-800"><%= s.name %></span>
+        </div>
+        <div class="flex gap-2 text-xs">
+          <% if (!s.friendship_status) { %>
+            <form method="POST" action="/social/friends/request/<%= s.id %>">
+              <button class="btn-primary py-1.5 px-3">Add Friend</button>
+            </form>
+          <% } else if (s.friendship_status === 'pending' && s.friendship_requester == user.id) { %>
+            <span class="text-gray-400">Request sent</span>
+          <% } else if (s.friendship_status === 'pending') { %>
+            <span class="text-amber-500">Sent you a request</span>
+          <% } else if (s.friendship_status === 'accepted') { %>
+            <span class="text-green-600 font-medium">✓ Friends</span>
+          <% } else if (s.friendship_status === 'blocked') { %>
+            <form method="POST" action="/social/friends/unblock/<%= s.id %>">
+              <button class="btn-secondary py-1.5 px-3">Unblock</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Pending Requests -->
+  <% if (incoming.length > 0) { %>
+  <div class="card border-l-4 border-amber-400">
+    <h2 class="text-base font-semibold text-gray-800 mb-3">Pending Requests (<%= incoming.length %>)</h2>
+    <div class="space-y-2">
+      <% incoming.forEach(req => { %>
+      <div class="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
+        <div class="flex items-center gap-3">
+          <% if (req.profile_picture) { %>
+            <img src="<%= req.profile_picture %>" class="w-9 h-9 rounded-full object-cover" />
+          <% } else { %>
+            <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm">
+              <%= req.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+          <div>
+            <p class="text-sm font-medium text-gray-800"><%= req.name %></p>
+            <p class="text-xs text-gray-400"><%= new Date(req.created_at).toLocaleDateString() %></p>
+          </div>
+        </div>
+        <div class="flex gap-2 text-xs">
+          <form method="POST" action="/social/friends/<%= req.friendship_id %>/accept">
+            <button class="btn-primary py-1.5 px-3">Accept</button>
+          </form>
+          <form method="POST" action="/social/friends/<%= req.friendship_id %>/reject">
+            <button class="btn-secondary py-1.5 px-3">Decline</button>
+          </form>
+          <form method="POST" action="/social/friends/block/<%= req.requester_id %>">
+            <button class="text-red-400 hover:text-red-600 py-1.5 px-3">Block</button>
+          </form>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Friends List -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800">My Friends (<%= friends.length %>)</h2>
+      <a href="/social/messages" class="text-sm text-indigo-600 hover:underline">💬 Messages</a>
+    </div>
+    <% if (friends.length === 0) { %>
+      <p class="text-sm text-gray-400 text-center py-6">No friends yet. Search above to connect with classmates.</p>
+    <% } else { %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <% friends.forEach(f => { %>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <% if (f.profile_picture) { %>
+            <img src="<%= f.profile_picture %>" class="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+          <% } else { %>
+            <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">
+              <%= f.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+          <p class="text-sm font-medium text-gray-800 truncate"><%= f.name %></p>
+        </div>
+        <div class="flex gap-1.5 flex-shrink-0 text-xs">
+          <a href="/social/messages/<%= f.friend_id %>" class="btn-primary py-1.5 px-2.5">💬</a>
+          <form method="POST" action="/social/friends/<%= f.friendship_id %>?_method=DELETE"
+                onsubmit="return confirm('Remove <%= f.name %> as a friend?')">
+            <button class="btn-secondary py-1.5 px-2.5 text-red-400">✕</button>
+          </form>
+          <form method="POST" action="/social/friends/block/<%= f.friend_id %>"
+                onsubmit="return confirm('Block <%= f.name %>? This will remove the friendship.')">
+            <button class="btn-secondary py-1.5 px-2.5">🚫</button>
+          </form>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Outgoing Requests -->
+  <% if (outgoing.length > 0) { %>
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-3">Sent Requests (<%= outgoing.length %>)</h2>
+    <div class="space-y-2">
+      <% outgoing.forEach(r => { %>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+        <div class="flex items-center gap-3">
+          <% if (r.profile_picture) { %>
+            <img src="<%= r.profile_picture %>" class="w-8 h-8 rounded-full object-cover" />
+          <% } else { %>
+            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
+              <%= r.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+          <span class="text-sm text-gray-700"><%= r.name %></span>
+        </div>
+        <span class="text-xs text-gray-400">Pending…</span>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+</div>
+
+<%- include('../partials/footer') %>
