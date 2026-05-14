@@ -1,0 +1,58 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+
+  <div>
+    <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">Messages</h1>
+    <% if (totalUnread > 0) { %>
+      <p class="text-sm text-indigo-600 font-medium"><%= totalUnread %> unread message<%= totalUnread > 1 ? 's' : '' %></p>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <% if (conversations.length === 0) { %>
+      <div class="text-center py-10">
+        <p class="text-3xl mb-2">💬</p>
+        <p class="text-gray-500 text-sm">No conversations yet.</p>
+        <a href="/social/friends" class="text-indigo-600 text-sm hover:underline">Go to Friends to start chatting</a>
+      </div>
+    <% } else { %>
+    <div class="divide-y divide-gray-100">
+      <% conversations.forEach(c => { %>
+      <a href="/social/messages/<%= c.partner_id %>"
+         class="flex items-center gap-4 py-3.5 px-2 hover:bg-gray-50 rounded-xl transition-colors">
+        <% if (c.partner_pic) { %>
+          <img src="<%= c.partner_pic %>" class="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+        <% } else { %>
+          <div class="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold flex-shrink-0">
+            <%= c.partner_name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold text-gray-800 <%= parseInt(c.unread_count) > 0 ? 'text-indigo-700' : '' %>">
+              <%= c.partner_name %>
+              <% if (parseInt(c.unread_count) > 0) { %>
+                <span class="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold"><%= c.unread_count %></span>
+              <% } %>
+            </p>
+            <p class="text-xs text-gray-400 flex-shrink-0 ml-2">
+              <%= new Date(c.last_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) %>
+            </p>
+          </div>
+          <p class="text-xs text-gray-500 truncate mt-0.5">
+            <%= c.sender_id == user.id ? 'You: ' : '' %><%= c.last_message %>
+          </p>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

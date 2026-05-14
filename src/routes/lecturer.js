@@ -6,6 +6,7 @@ const pool    = require('../config/database');
 const upload  = require('../middleware/upload');
 const { requireRole }            = require('../middleware/auth');
 const { uploadFile, deleteFile } = require('../helpers/storage');
+const { notifyEnrolledStudents } = require('../helpers/notifications');
 
 const router   = express.Router();
 const lecturerOnly = requireRole('lecturer');
@@ -131,6 +132,18 @@ router.post('/announcements/create',
          VALUES ($1, $2, $3, $4, $5)`,
         [module_id, req.user.id, title, content, is_pinned === 'on']
       );
+
+      // Notify enrolled students
+      const { rows: [mod1] } = await pool.query('SELECT module_name FROM module WHERE id=$1', [module_id]);
+      await notifyEnrolledStudents(
+        module_id,
+        'announcement',
+        `📢 New announcement in ${mod1.module_name}`,
+        title,
+        `/student/modules/${module_id}`,
+        (uid) => `announcement:${module_id}:${title.slice(0,80)}:${uid}`
+      );
+
       req.session.success = 'Announcement posted.';
       res.redirect(`/lecturer/modules/${module_id}`);
     } catch (err) {
@@ -183,10 +196,21 @@ router.post('/upload-pdf',
         req.file.buffer, req.file.originalname, 'pdfs', req.file.mimetype
       );
 
-      await pool.query(
+      const { rows: [newNote] } = await pool.query(
         `INSERT INTO pdf_note (module_id, uploaded_by_user_id, topic_name, file_url, file_name, file_size, is_tutor_note)
-         VALUES ($1, $2, $3, $4, $5, $6, false)`,
+         VALUES ($1, $2, $3, $4, $5, $6, false) RETURNING id`,
         [module_id, req.user.id, topic_name, fileUrl, req.file.originalname, req.file.size]
+      );
+
+      // Notify enrolled students
+      const { rows: [mod2] } = await pool.query('SELECT module_name FROM module WHERE id=$1', [module_id]);
+      await notifyEnrolledStudents(
+        module_id,
+        'new_pdf',
+        `📄 New notes in ${mod2.module_name}`,
+        `"${topic_name}" has been uploaded.`,
+        `/student/modules/${module_id}`,
+        (uid) => `new_pdf:${newNote.id}:${uid}`
       );
 
       req.session.success = `"${topic_name}" uploaded successfully.`;
@@ -255,6 +279,17 @@ router.delete('/edit-pdf/:pdfId', lecturerOnly, async (req, res) => {
     if (!rows[0]) { req.session.error = 'Note not found.'; return res.redirect('/lecturer/dashboard'); }
     await deleteFile(rows[0].file_url);
     await pool.query('UPDATE pdf_note SET deleted_at = NOW() WHERE id = $1', [req.params.pdfId]);
+
+    // Notify enrolled students
+    const { rows: [mod3] } = await pool.query('SELECT module_name FROM module WHERE id=$1', [rows[0].module_id]);
+    await notifyEnrolledStudents(
+      rows[0].module_id,
+      'pdf_removed',
+      `🗑️ Notes removed in ${mod3.module_name}`,
+      `"${rows[0].topic_name}" has been removed.`,
+      `/student/modules/${rows[0].module_id}`
+    );
+
     req.session.success = 'Note deleted.';
     res.redirect(`/lecturer/modules/${rows[0].module_id}`);
   } catch (err) {
@@ -309,6 +344,17 @@ router.post('/create-quiz', lecturerOnly, async (req, res) => {
         [quiz.id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option.toUpperCase()]
       );
     }
+
+    // Notify enrolled students
+    const { rows: [mod4] } = await pool.query('SELECT module_name FROM module WHERE id=$1', [module_id]);
+    await notifyEnrolledStudents(
+      module_id,
+      'new_quiz',
+      `📝 New quiz in ${mod4.module_name}`,
+      `"${topic_name}" is now available.`,
+      `/student/modules/${module_id}`,
+      (uid) => `new_quiz:${quiz.id}:${uid}`
+    );
 
     req.session.success = `Quiz "${topic_name}" created.`;
     res.redirect(`/lecturer/modules/${module_id}`);
@@ -441,6 +487,82 @@ router.post('/profile',
     }
   }
 );
+
+// ── PDF Note Performance Analytics ──────────────────────────────────────────
+router.get('/pdf-analytics/:moduleId', lecturerOnly, async (req, res) => {
+  try {
+    const ok = await assertLecturerModule(req.user.id, req.params.moduleId, res, '/lecturer/dashboard');
+    if (!ok) { req.session.error = 'Access denied.'; return res.redirect('/lecturer/dashboard'); }
+
+    const [moduleRes, pdfStats] = await Promise.all([
+      pool.query('SELECT * FROM module WHERE id=$1 AND deleted_at IS NULL', [req.params.moduleId]),
+      pool.query(
+        `SELECT
+           pn.id, pn.topic_name, pn.created_at,
+           COUNT(a.id)                                         AS attempt_count,
+           ROUND(AVG(a.score_percentage), 1)                   AS avg_score,
+           COUNT(*) FILTER (WHERE a.score_percentage < 50)     AS below_50,
+           COUNT(*) FILTER (WHERE a.score_percentage >= 85)    AS above_85,
+           COUNT(DISTINCT a.student_id)                        AS unique_students
+         FROM pdf_note pn
+         LEFT JOIN ai_quiz_attempt a ON a.pdf_note_id = pn.id
+         WHERE pn.module_id=$1 AND pn.is_tutor_note=false AND pn.deleted_at IS NULL
+         GROUP BY pn.id, pn.topic_name, pn.created_at
+         ORDER BY avg_score ASC NULLS LAST`,
+        [req.params.moduleId]
+      )
+    ]);
+
+    if (!moduleRes.rows[0]) { req.session.error = 'Module not found.'; return res.redirect('/lecturer/dashboard'); }
+
+    // For each struggling note, find students who scored < 50% and notify them
+    const THRESHOLD = 50;
+    for (const pdf of pdfStats.rows) {
+      if (pdf.below_50 > 0) {
+        const { rows: struggling } = await pool.query(
+          `SELECT DISTINCT a.student_id
+           FROM ai_quiz_attempt a
+           WHERE a.pdf_note_id=$1
+             AND a.score_percentage < $2`,
+          [pdf.id, THRESHOLD]
+        );
+        // Find nearest upcoming mentor session for this module
+        const { rows: nextSession } = await pool.query(
+          `SELECT ts.id, ts.topic, ts.date_time FROM tutorial_session ts
+           WHERE ts.module_id=$1 AND ts.date_time >= NOW()
+           ORDER BY ts.date_time ASC LIMIT 1`,
+          [req.params.moduleId]
+        );
+        for (const s of struggling) {
+          const week = new Date().toISOString().slice(0, 10);
+          const { createNotification } = require('../helpers/notifications');
+          const sessionHint = nextSession[0]
+            ? ` A mentor session on "${nextSession[0].topic}" is scheduled soon — consider attending.`
+            : '';
+          await createNotification(
+            s.student_id,
+            'low_score',
+            `Struggling with "${pdf.topic_name}"?`,
+            `Your quiz average on this topic is below ${THRESHOLD}%.${sessionHint}`,
+            `/student/quiz/${pdf.id}`,
+            `low_score:${pdf.id}:${week}`
+          );
+        }
+      }
+    }
+
+    res.render('lecturer/pdf-analytics', {
+      title: 'PDF Analytics — ' + moduleRes.rows[0].module_name,
+      user: req.user,
+      module: moduleRes.rows[0],
+      pdfStats: pdfStats.rows
+    });
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to load PDF analytics.';
+    res.redirect('/lecturer/dashboard');
+  }
+});
 
 module.exports = router;
 

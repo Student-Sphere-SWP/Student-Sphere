@@ -1,0 +1,103 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-5xl mx-auto space-y-6">
+
+  <div>
+    <a href="/student/progress" class="text-gray-400 hover:text-gray-600 text-sm">← My Progress</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">My Improvement</h1>
+    <p class="text-sm text-gray-500">Score trajectory per topic over time, compared to class averages.</p>
+  </div>
+
+  <!-- Module filter -->
+  <form method="GET" action="/student/improvement" class="flex items-center gap-3">
+    <label class="text-sm text-gray-600">Filter by module:</label>
+    <select name="module_id" onchange="this.form.submit()" class="form-input w-60 text-sm py-1.5">
+      <option value="">All Modules</option>
+      <% modules.forEach(m => { %>
+        <option value="<%= m.id %>" <%= selectedModuleId == m.id ? 'selected' : '' %>><%= m.module_name %></option>
+      <% }) %>
+    </select>
+  </form>
+
+  <% if (topics.length === 0) { %>
+  <div class="card text-center py-10">
+    <p class="text-gray-400 text-sm">No quiz attempts recorded yet. Take some quizzes to see your progress here.</p>
+    <a href="/student/practice" class="text-indigo-600 text-sm hover:underline mt-2 inline-block">→ Find Practice Notes</a>
+  </div>
+  <% } else { %>
+
+  <div class="space-y-4">
+    <% topics.forEach(topic => { %>
+    <%
+      const firstScore = topic.weeks[0]?.avg_score ?? null;
+      const lastScore  = topic.weeks[topic.weeks.length - 1]?.avg_score ?? null;
+      const trend = firstScore !== null && lastScore !== null ? lastScore - firstScore : null;
+      const latestVsClass = topic.class_avg && lastScore !== null ? lastScore - topic.class_avg : null;
+    %>
+    <div class="card">
+      <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <div>
+          <p class="text-base font-semibold text-gray-800"><%= topic.topic_name %></p>
+          <p class="text-xs text-gray-400"><%= topic.module_name %></p>
+        </div>
+        <div class="flex gap-3 text-xs flex-wrap">
+          <% if (trend !== null) { %>
+          <div class="flex items-center gap-1 px-2.5 py-1 rounded-full <%= trend >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600' %>">
+            <%= trend >= 0 ? '↑' : '↓' %>
+            <%= Math.abs(trend.toFixed(1)) %>% overall
+          </div>
+          <% } %>
+          <% if (latestVsClass !== null) { %>
+          <div class="flex items-center gap-1 px-2.5 py-1 rounded-full <%= latestVsClass >= 0 ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700' %>">
+            <%= latestVsClass >= 0 ? '▲' : '▼' %>
+            <%= Math.abs(latestVsClass.toFixed(1)) %>% vs class avg (<%= topic.class_avg.toFixed(1) %>%)
+          </div>
+          <% } %>
+          <% if (lastScore !== null) { %>
+          <div class="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+            Latest: <%= lastScore %>%
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Simple HTML/CSS bar chart by week -->
+      <% if (topic.weeks.length > 0) { %>
+      <div class="flex items-end gap-1 h-20">
+        <% topic.weeks.forEach((w, i) => { %>
+        <% const h = Math.max(4, Math.round(w.avg_score * 0.8)); %>
+        <div class="relative group flex-1 min-w-[20px]">
+          <div class="rounded-t-sm w-full
+            <%= w.avg_score >= 85 ? 'bg-green-500' : w.avg_score >= 70 ? 'bg-indigo-500' : w.avg_score >= 50 ? 'bg-amber-400' : 'bg-red-400' %>"
+               style="height: <%= h %>px;"
+               title="<%= w.avg_score %>% — week of <%= new Date(w.week).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) %>">
+          </div>
+          <p class="text-[9px] text-gray-400 text-center mt-1 hidden group-hover:block absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <%= w.avg_score %>%
+          </p>
+        </div>
+        <% }) %>
+      </div>
+      <!-- Class average line indicator -->
+      <% if (topic.class_avg) { %>
+      <div class="mt-3 flex items-center gap-2 text-xs text-gray-400">
+        <div class="w-6 border-t-2 border-dashed border-gray-400"></div>
+        <span>Class avg: <%= topic.class_avg %>%</span>
+      </div>
+      <% } %>
+      <p class="text-xs text-gray-400 mt-2">
+        <%= topic.weeks.length %> week<%= topic.weeks.length > 1 ? 's' : '' %> of data ·
+        Oldest: week of <%= new Date(topic.weeks[0].week).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) %>
+      </p>
+      <% } %>
+    </div>
+    <% }) %>
+  </div>
+
+  <% } %>
+
+</div>
+
+<%- include('../partials/footer') %>

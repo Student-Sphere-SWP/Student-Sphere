@@ -1,0 +1,42 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <div>
+    <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">Notifications</h1>
+  </div>
+
+  <div class="card">
+    <% if (notifications.length === 0) { %>
+      <p class="text-gray-400 text-sm text-center py-8">All caught up — no notifications.</p>
+    <% } else { %>
+    <div class="divide-y divide-gray-100">
+      <% notifications.forEach(n => { %>
+      <div class="py-3.5 flex items-start gap-3 <%= n.read_at ? 'opacity-60' : '' %>">
+        <div class="w-2 h-2 rounded-full mt-2 flex-shrink-0
+          <%= n.type === 'friend_request' ? 'bg-amber-400' :
+             n.type === 'friend_accepted' ? 'bg-green-500' :
+             n.type === 'new_message'     ? 'bg-indigo-500' :
+             n.type === 'low_score'       ? 'bg-red-400' :
+             n.type === 'session_cancelled' ? 'bg-red-400' :
+             'bg-gray-400' %>"></div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-gray-800"><%= n.title %></p>
+          <% if (n.body) { %><p class="text-xs text-gray-500 mt-0.5"><%= n.body %></p><% } %>
+          <p class="text-xs text-gray-400 mt-1"><%= new Date(n.created_at).toLocaleString('en-GB') %></p>
+        </div>
+        <% if (n.link) { %>
+          <a href="<%= n.link %>" class="text-xs text-indigo-600 hover:underline flex-shrink-0">View →</a>
+        <% } %>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

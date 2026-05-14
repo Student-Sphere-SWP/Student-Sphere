@@ -1,0 +1,109 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-5xl mx-auto space-y-6">
+
+  <div>
+    <a href="/lecturer/modules/<%= module.id %>" class="text-gray-400 hover:text-gray-600 text-sm">← <%= module.module_name %></a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">PDF Note Performance</h1>
+    <p class="text-sm text-gray-500">Average quiz scores per note. Low-scoring students have been notified automatically.</p>
+  </div>
+
+  <% if (pdfStats.length === 0) { %>
+  <div class="card text-center py-10 text-gray-400">No PDF notes found for this module.</div>
+  <% } else { %>
+
+  <!-- Summary cards -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <%
+      const avgAll = pdfStats.filter(p => p.avg_score !== null).reduce((s,p) => s + parseFloat(p.avg_score), 0);
+      const withAttempts = pdfStats.filter(p => p.attempt_count > 0);
+      const overallAvg = withAttempts.length ? (avgAll / withAttempts.length).toFixed(1) : '—';
+      const totalAttempts = pdfStats.reduce((s,p) => s + parseInt(p.attempt_count), 0);
+      const struggling = pdfStats.filter(p => parseFloat(p.avg_score) < 50 && p.attempt_count > 0);
+    %>
+    <div class="card text-center">
+      <p class="text-2xl font-extrabold text-indigo-600"><%= pdfStats.length %></p>
+      <p class="text-xs text-gray-500 mt-1">Notes</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-extrabold text-indigo-600"><%= totalAttempts %></p>
+      <p class="text-xs text-gray-500 mt-1">Total Attempts</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-extrabold <%= parseFloat(overallAvg) >= 70 ? 'text-green-600' : parseFloat(overallAvg) >= 50 ? 'text-amber-500' : 'text-red-500' %>"><%= overallAvg %>%</p>
+      <p class="text-xs text-gray-500 mt-1">Overall Avg</p>
+    </div>
+    <div class="card text-center">
+      <p class="text-2xl font-extrabold text-red-500"><%= struggling.length %></p>
+      <p class="text-xs text-gray-500 mt-1">Notes Below 50%</p>
+    </div>
+  </div>
+
+  <!-- Per-note table -->
+  <div class="card overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs text-gray-500 border-b border-gray-100">
+          <th class="pb-3 pr-4 font-medium">Topic / Note</th>
+          <th class="pb-3 pr-4 font-medium text-center">Attempts</th>
+          <th class="pb-3 pr-4 font-medium text-center">Students</th>
+          <th class="pb-3 pr-4 font-medium text-center">Avg Score</th>
+          <th class="pb-3 pr-4 font-medium text-center">Below 50%</th>
+          <th class="pb-3 font-medium text-center">Above 85%</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        <% pdfStats.forEach(p => { %>
+        <%
+          const avg = p.avg_score !== null ? parseFloat(p.avg_score) : null;
+          const barColor = avg === null ? 'bg-gray-200' : avg >= 70 ? 'bg-green-500' : avg >= 50 ? 'bg-amber-400' : 'bg-red-500';
+        %>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="py-3 pr-4">
+            <p class="font-medium text-gray-800"><%= p.topic_name %></p>
+            <p class="text-xs text-gray-400 mt-0.5">Added <%= new Date(p.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) %></p>
+          </td>
+          <td class="py-3 pr-4 text-center text-gray-700"><%= p.attempt_count %></td>
+          <td class="py-3 pr-4 text-center text-gray-700"><%= p.unique_students %></td>
+          <td class="py-3 pr-4 text-center">
+            <% if (avg !== null) { %>
+            <div class="flex items-center gap-2 justify-center">
+              <div class="w-20 bg-gray-100 rounded-full h-2">
+                <div class="h-2 rounded-full <%= barColor %>" style="width: <%= avg %>%"></div>
+              </div>
+              <span class="font-semibold <%= avg >= 70 ? 'text-green-600' : avg >= 50 ? 'text-amber-500' : 'text-red-500' %>"><%= avg %>%</span>
+            </div>
+            <% } else { %>
+              <span class="text-gray-400">—</span>
+            <% } %>
+          </td>
+          <td class="py-3 pr-4 text-center">
+            <% if (parseInt(p.below_50) > 0) { %>
+              <span class="badge bg-red-100 text-red-700"><%= p.below_50 %></span>
+            <% } else { %>
+              <span class="text-gray-400">0</span>
+            <% } %>
+          </td>
+          <td class="py-3 text-center">
+            <% if (parseInt(p.above_85) > 0) { %>
+              <span class="badge bg-green-100 text-green-700"><%= p.above_85 %></span>
+            <% } else { %>
+              <span class="text-gray-400">0</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-xs text-gray-400 text-center">
+    Students who scored below 50% on any note have been automatically notified and directed to upcoming mentor sessions.
+  </p>
+  <% } %>
+
+</div>
+
+<%- include('../partials/footer') %>
