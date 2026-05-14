@@ -1,86 +1,200 @@
 <%- include('../partials/head', { title }) %>
 <%- include('../partials/navbar', { user }) %>
 
-<div class="space-y-6">
-  <div>
-    <h1 class="text-2xl font-bold text-gray-900">Mentor Dashboard</h1>
-    <p class="text-sm text-gray-500">Welcome back, <%= user.name %>!</p>
-  </div>
-
-  <!-- Stat cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="card">
-      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Assigned Modules</p>
-      <p class="text-3xl font-bold text-gray-900 mt-1"><%= stats.moduleCount %></p>
-    </div>
-    <div class="card">
-      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Sessions</p>
-      <p class="text-3xl font-bold text-purple-600 mt-1"><%= stats.sessionCount %></p>
-    </div>
-    <div class="card">
-      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Upcoming Sessions</p>
-      <p class="text-3xl font-bold text-blue-600 mt-1"><%= stats.upcomingCount %></p>
-    </div>
-    <div class="card">
-      <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Avg Rating</p>
-      <div class="flex items-baseline gap-2 mt-1">
-        <p class="text-3xl font-bold text-yellow-500"><%= stats.avgRating ? parseFloat(stats.avgRating).toFixed(1) : '—' %></p>
-        <span class="text-yellow-400 text-xl">★</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modules -->
-  <div class="card">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-base font-semibold text-gray-800">My Modules</h2>
-      <a href="/mentor/sessions" class="btn-primary text-xs">Manage Sessions</a>
-    </div>
-    <% if (!modules.length) { %>
-      <p class="text-gray-400 text-sm text-center py-8">You haven't been assigned to any modules yet.</p>
-    <% } else { %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-      <% modules.forEach(m => { %>
-      <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
-        <div class="flex items-center gap-2">
-          <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <%= m.colour %>"></div>
-          <p class="text-sm font-semibold text-gray-800 truncate"><%= m.module_name %></p>
+<div style="background: linear-gradient(160deg, rgba(10,8,25,0.65) 0%, rgba(18,12,32,0.65) 30%, rgba(10,20,32,0.65) 70%, rgba(8,10,20,0.65) 100%), url('/images/login_bg.jpg'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat; min-height: 100vh; padding: 32px 20px 60px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased;">
+  
+  <div style="max-width: 1200px; margin: 0 auto;">
+    
+    <!-- Header -->
+    <div style="position: relative; background: rgba(15,12,30,0.75); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 32px 40px; margin-bottom: 28px; overflow: hidden;">
+      <div style="position: absolute; top: -80px; right: -40px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+      <div style="position: absolute; bottom: -60px; left: 20%; width: 160px; height: 160px; background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%); border-radius: 50%;"></div>
+      
+      <div style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <div style="width: 10px; height: 10px; background: #a78bfa; border-radius: 50%; box-shadow: 0 0 14px rgba(167,139,250,0.6);"></div>
+            <p style="font-size: 13px; font-weight: 700; color: #c4b5fd; text-transform: uppercase; letter-spacing: 2.5px; margin: 0;">Mentor Portal</p>
+          </div>
+          <h1 style="font-size: 40px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -1px; line-height: 1.1;">Welcome back</h1>
+          <p style="font-size: 20px; color: #e2e8f0; margin: 6px 0 0 0; font-weight: 600;"><%= user.name %></p>
         </div>
-        <p class="text-xs text-gray-400"><%= m.module_code %></p>
-        <div class="flex gap-2 pt-1">
-          <a href="/mentor/analytics/<%= m.id %>" class="btn-secondary text-xs flex-1 text-center">Analytics</a>
-          <a href="/mentor/my-notes?module_id=<%= m.id %>" class="btn-secondary text-xs flex-1 text-center">Notes</a>
+        <div style="background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.3); border-radius: 50px; padding: 12px 24px; display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 14px;">🟢</span>
+          <span style="font-size: 14px; color: #ddd6fe; font-weight: 600;">Online</span>
         </div>
       </div>
-      <% }) %>
+    </div>
+
+    <!-- Stat cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 28px;">
+      
+      <div style="position: relative; background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);"></div>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+          <div>
+            <p style="font-size: 12px; font-weight: 700; color: #6ee7b7; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 14px 0;">Assigned Modules</p>
+            <p style="font-size: 52px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1; letter-spacing: -2px;"><%= stats.moduleCount %></p>
+          </div>
+          <div style="background: rgba(16,185,129,0.15); border-radius: 14px; padding: 14px;">
+            <span style="font-size: 26px;">📚</span>
+          </div>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: #6ee7b7; font-weight: 600;">● Active</span>
+        </div>
+      </div>
+
+      <div style="position: relative; background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #8b5cf6, #a78bfa, #c4b5fd);"></div>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+          <div>
+            <p style="font-size: 12px; font-weight: 700; color: #c4b5fd; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 14px 0;">Total Sessions</p>
+            <p style="font-size: 52px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1; letter-spacing: -2px;"><%= stats.sessionCount %></p>
+          </div>
+          <div style="background: rgba(139,92,246,0.15); border-radius: 14px; padding: 14px;">
+            <span style="font-size: 26px;">🎯</span>
+          </div>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: #c4b5fd; font-weight: 600;">● Track record</span>
+        </div>
+      </div>
+
+      <div style="position: relative; background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd);"></div>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+          <div>
+            <p style="font-size: 12px; font-weight: 700; color: #93c5fd; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 14px 0;">Upcoming</p>
+            <p style="font-size: 52px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1; letter-spacing: -2px;"><%= stats.upcomingCount %></p>
+          </div>
+          <div style="background: rgba(59,130,246,0.15); border-radius: 14px; padding: 14px;">
+            <span style="font-size: 26px;">📅</span>
+          </div>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: #93c5fd; font-weight: 600;">● Scheduled</span>
+        </div>
+      </div>
+
+      <div style="position: relative; background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d);"></div>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+          <div>
+            <p style="font-size: 12px; font-weight: 700; color: #fcd34d; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 14px 0;">Avg Rating</p>
+            <p style="font-size: 52px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1; letter-spacing: -2px;">
+              <%= stats.avgRating ? parseFloat(stats.avgRating).toFixed(1) : '—' %>
+            </p>
+          </div>
+          <div style="background: rgba(245,158,11,0.15); border-radius: 14px; padding: 14px;">
+            <span style="font-size: 26px;">⭐</span>
+          </div>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: #fcd34d; font-weight: 600;">● Excellence</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modules -->
+    <div style="background: rgba(15,12,30,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 36px; margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 5px; height: 32px; background: linear-gradient(180deg, #c4b5fd, #7c3aed); border-radius: 3px;"></div>
+          <h2 style="font-size: 22px; font-weight: 700; color: #ffffff; margin: 0; letter-spacing: -0.5px;">My Modules</h2>
+        </div>
+        <a href="/mentor/sessions" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; padding: 13px 26px; border-radius: 12px; font-size: 14px; font-weight: 700; text-decoration: none; letter-spacing: 0.3px; box-shadow: 0 4px 20px rgba(124,58,237,0.4);">Manage Sessions →</a>
+      </div>
+
+      <% if (!modules.length) { %>
+        <div style="text-align: center; padding: 60px 20px;">
+          <div style="background: rgba(139,92,246,0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px;">📭</div>
+          <p style="color: #cbd5e1; font-size: 17px; font-weight: 600; margin: 0;">No modules assigned yet</p>
+          <p style="color: #94a3b8; font-size: 14px; margin: 8px 0 0 0;">Modules will appear here once assigned</p>
+        </div>
+      <% } else { %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px;">
+          <% modules.forEach(m => { %>
+          <div style="position: relative; background: rgba(20,16,38,0.8); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 26px;">
+            <div style="position: absolute; inset: -1px; border-radius: 18px; background: linear-gradient(135deg, <%= m.colour %>25, transparent 80%); opacity: 0.6; z-index: -1;"></div>
+            
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 12px; background: <%= m.colour %>; opacity: 0.25; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0;">
+                <div style="width: 14px; height: 14px; border-radius: 4px; background: <%= m.colour %>; box-shadow: 0 0 18px <%= m.colour %>99;"></div>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <p style="font-size: 16px; font-weight: 700; color: #f8fafc; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.2px;"><%= m.module_name %></p>
+                <p style="font-size: 12px; color: #c4b5fd; margin: 4px 0 0 0; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 0.5px;"><%= m.module_code %></p>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 18px;">
+              <a href="/mentor/analytics/<%= m.id %>" style="flex: 1; text-align: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); color: #f1f5f9; padding: 11px 0; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: 0.3px;">📊 Analytics</a>
+              <a href="/mentor/my-notes?module_id=<%= m.id %>" style="flex: 1; text-align: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); color: #f1f5f9; padding: 11px 0; border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: 0.3px;">📝 Notes</a>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Upcoming Sessions -->
+    <% if (upcomingSessions.length) { %>
+    <div style="background: rgba(15,12,30,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 36px;">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 28px; flex-wrap: wrap;">
+        <div style="width: 5px; height: 32px; background: linear-gradient(180deg, #93c5fd, #2563eb); border-radius: 3px;"></div>
+        <h2 style="font-size: 22px; font-weight: 700; color: #ffffff; margin: 0; letter-spacing: -0.5px;">Upcoming Sessions</h2>
+        <span style="background: rgba(59,130,246,0.25); border: 1px solid rgba(59,130,246,0.35); color: #bfdbfe; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;"><%= upcomingSessions.length %> scheduled</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <% upcomingSessions.forEach((s, index) => { %>
+        <div style="display: flex; gap: 20px; position: relative;">
+          <div style="display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: <%= index === 0 ? '#3b82f6' : '#475569' %>; border: 3px solid <%= index === 0 ? '#1e3a5f' : '#334155' %>; box-shadow: 0 0 14px <%= index === 0 ? 'rgba(59,130,246,0.6)' : 'transparent' %>;"></div>
+            <% if (index < upcomingSessions.length - 1) { %>
+              <div style="width: 2px; flex: 1; min-height: 22px; background: rgba(255,255,255,0.12); margin: 4px 0;"></div>
+            <% } %>
+          </div>
+
+          <div style="flex: 1; background: rgba(20,16,38,0.8); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 20px 24px; margin-bottom: 4px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+              <div style="flex: 1; min-width: 0;">
+                <p style="font-size: 16px; font-weight: 700; color: #f8fafc; margin: 0; letter-spacing: -0.2px;"><%= s.topic %></p>
+                <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px; flex-wrap: wrap;">
+                  <span style="font-size: 13px; color: #bfdbfe; font-weight: 600;">
+                    📅 <%= new Date(s.date_time).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) %>
+                  </span>
+                  <span style="width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3); flex-shrink: 0;"></span>
+                  <span style="font-size: 13px; color: #e2e8f0; font-weight: 600;">
+                    🕐 <%= new Date(s.date_time).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) %>
+                  </span>
+                  <span style="width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.3); flex-shrink: 0;"></span>
+                  <span style="font-size: 13px; color: #ddd6fe; font-weight: 600;">
+                    📘 <%= s.module_name %>
+                  </span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
+                <div style="background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3); border-radius: 20px; padding: 8px 18px;">
+                  <span style="font-size: 13px; color: #bfdbfe; font-weight: 700;"><%= s.rsvp_count %> RSVP</span>
+                </div>
+                <a href="/mentor/sessions/<%= s.id %>/rsvps" style="background: rgba(139,92,246,0.25); border: 1px solid rgba(139,92,246,0.4); color: #ddd6fe; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; letter-spacing: 0.3px;">View →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
     </div>
     <% } %>
-  </div>
 
-  <!-- Upcoming sessions quick view -->
-  <% if (upcomingSessions.length) { %>
-  <div class="card">
-    <h2 class="text-base font-semibold text-gray-800 mb-4">Upcoming Sessions</h2>
-    <div class="space-y-2">
-      <% upcomingSessions.forEach(s => { %>
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-        <div>
-          <p class="text-sm font-medium text-gray-700"><%= s.topic %></p>
-          <p class="text-xs text-gray-400">
-            <%= new Date(s.date_time).toLocaleDateString('en-GB', {day:'numeric', month:'short'}) %>
-            at <%= new Date(s.date_time).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) %>
-            · <%= s.module_name %>
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-400"><%= s.rsvp_count %> RSVP</span>
-          <a href="/mentor/sessions/<%= s.id %>/rsvps" class="btn-secondary text-xs">RSVPs</a>
-        </div>
-      </div>
-      <% }) %>
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 36px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.08);">
+      <p style="font-size: 12px; color: #94a3b8; margin: 0; letter-spacing: 0.5px; font-weight: 500;">Mentor Dashboard · <%= new Date().getFullYear() %></p>
     </div>
+
   </div>
-  <% } %>
 </div>
 
 <%- include('../partials/footer') %>
