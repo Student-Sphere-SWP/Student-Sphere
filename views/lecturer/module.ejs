@@ -74,6 +74,65 @@
         <% } %>
       </div>
 
+      <!-- Class Tests -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-semibold text-gray-800">Class Tests (<%= classTests.length %>)</h2>
+        </div>
+
+        <!-- Create form -->
+        <details class="mb-4" <%= classTests.length === 0 ? 'open' : '' %>>
+          <summary class="cursor-pointer text-sm text-primary-600 font-medium hover:underline select-none">+ Add Class Test</summary>
+          <form method="POST" action="/lecturer/class-tests" class="mt-4 space-y-3 bg-gray-50 rounded-xl p-4">
+            <input type="hidden" name="module_id" value="<%= module.id %>" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="form-label">Test Title <span class="text-red-500">*</span></label>
+                <input type="text" name="title" required class="form-input" placeholder="e.g. Class Test 1" />
+              </div>
+              <div>
+                <label class="form-label">Total Marks <span class="text-red-500">*</span></label>
+                <input type="number" name="total_marks" required min="1" step="0.5" value="100" class="form-input" />
+              </div>
+              <div>
+                <label class="form-label">Link to Lecture Notes <span class="text-red-500">*</span></label>
+                <select name="pdf_note_id" required class="form-input">
+                  <option value="" disabled selected>— select notes —</option>
+                  <% pdfs.forEach(p => { %>
+                    <option value="<%= p.id %>"><%= p.topic_name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Test Date (optional)</label>
+                <input type="date" name="test_date" class="form-input" />
+              </div>
+            </div>
+            <button type="submit" class="btn-primary text-sm">Create Class Test</button>
+          </form>
+        </details>
+
+        <% if (!classTests.length) { %>
+          <p class="text-gray-400 text-sm text-center py-4">No class tests yet.</p>
+        <% } else { %>
+        <div class="space-y-2">
+          <% classTests.forEach(ct => { %>
+          <a href="/lecturer/class-tests/<%= ct.id %>"
+             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-primary-50 hover:border-primary-200 border border-transparent transition-all group">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-gray-800 group-hover:text-primary-700"><%= ct.title %></p>
+              <p class="text-xs text-gray-400">📄 <%= ct.pdf_topic %> · Out of <%= ct.total_marks %><% if (ct.test_date) { %> · <%= new Date(ct.test_date).toLocaleDateString('en-GB') %><% } %></p>
+            </div>
+            <div class="flex items-center gap-3 flex-shrink-0 ml-3">
+              <span class="text-xs text-gray-400"><%= ct.marked_count %> marked</span>
+              <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+          <% }) %>
+        </div>
+        <% } %>
+      </div>
+
       <!-- Announcements -->
       <div class="card">
         <div class="flex items-center justify-between mb-4">

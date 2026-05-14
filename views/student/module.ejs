@@ -67,6 +67,40 @@
         <% } %>
       </div>
 
+      <!-- Class Tests -->
+      <% if (classTests.length) { %>
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-800 mb-4">📝 Class Tests</h2>
+        <div class="space-y-2">
+          <% classTests.forEach(ct => { %>
+          <%
+            const hasMark = ct.my_mark !== null;
+            const pct = hasMark ? Math.round((parseFloat(ct.my_mark) / parseFloat(ct.total_marks)) * 100) : null;
+            const scoreColor = pct === null ? 'text-gray-400'
+              : pct >= 75 ? 'text-emerald-600'
+              : pct >= 50 ? 'text-yellow-600'
+              : 'text-red-500';
+          %>
+          <a href="/student/class-tests/<%= ct.id %>"
+             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-primary-50 border border-transparent hover:border-primary-200 transition-all group">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-gray-800 group-hover:text-primary-700"><%= ct.title %></p>
+              <p class="text-xs text-gray-400">📄 <%= ct.pdf_topic %><% if (ct.test_date) { %> · <%= new Date(ct.test_date).toLocaleDateString('en-GB') %><% } %></p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0 ml-3">
+              <% if (hasMark) { %>
+                <span class="badge <%= pct>=75?'bg-emerald-100 text-emerald-700':pct>=50?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-600' %>"><%= pct %>%</span>
+              <% } else { %>
+                <span class="text-xs text-gray-400">Not marked yet</span>
+              <% } %>
+              <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+
       <!-- Practice quizzes (manual) -->
       <% if (manualQuizzes.length) { %>
       <div class="card">

@@ -39,7 +39,7 @@
     <input type="hidden" name="weak_topic_id"   value="<%= weakTopicId %>" />
     <input type="hidden" name="module_id"        value="<%= moduleId %>" />
     <input type="hidden" name="topic_name"       value="<%= topicName %>" />
-    <input type="hidden" name="questions_json"   value="<%- JSON.stringify(questions) %>" />
+    <input type="hidden" name="questions_json"   value="<%= JSON.stringify(questions) %>" />
     <input type="hidden" name="answers_json"     id="answersInput" value="[]" />
 
     <div class="space-y-4" id="questionsContainer">

@@ -53,7 +53,7 @@ router.get('/modules/:moduleId', lecturerOnly, async (req, res) => {
     const ok = await assertLecturerModule(req.user.id, req.params.moduleId, res, '/lecturer/dashboard');
     if (!ok) { req.session.error = 'Access denied.'; return res.redirect('/lecturer/dashboard'); }
 
-    const [moduleRes, pdfs, announcements, messages] = await Promise.all([
+    const [moduleRes, pdfs, announcements, messages, classTests] = await Promise.all([
       pool.query('SELECT * FROM module WHERE id = $1 AND deleted_at IS NULL', [req.params.moduleId]),
       pool.query(
         `SELECT pn.*, u.name as uploader_name FROM pdf_note pn
@@ -73,6 +73,15 @@ router.get('/modules/:moduleId', lecturerOnly, async (req, res) => {
          JOIN "user" u ON u.id = mm.user_id
          WHERE mm.module_id = $1 ORDER BY mm.created_at ASC LIMIT 100`,
         [req.params.moduleId]
+      ),
+      pool.query(
+        `SELECT ct.*, p.topic_name AS pdf_topic,
+           (SELECT COUNT(*) FROM class_test_mark ctm WHERE ctm.class_test_id = ct.id) AS marked_count
+         FROM class_test ct
+         JOIN pdf_note p ON p.id = ct.pdf_note_id
+         WHERE ct.module_id = $1
+         ORDER BY ct.test_date DESC NULLS LAST, ct.created_at DESC`,
+        [req.params.moduleId]
       )
     ]);
 
@@ -84,7 +93,8 @@ router.get('/modules/:moduleId', lecturerOnly, async (req, res) => {
       module:        moduleRes.rows[0],
       pdfs:          pdfs.rows,
       announcements: announcements.rows,
-      messages:      messages.rows
+      messages:      messages.rows,
+      classTests:    classTests.rows
     });
   } catch (err) {
     console.error(err);
@@ -560,6 +570,149 @@ router.get('/pdf-analytics/:moduleId', lecturerOnly, async (req, res) => {
   } catch (err) {
     console.error(err);
     req.session.error = 'Failed to load PDF analytics.';
+    res.redirect('/lecturer/dashboard');
+  }
+});
+
+// ── Class Tests ───────────────────────────────────────────────────────────────
+
+// POST /lecturer/class-tests — create a new class test
+router.post('/class-tests',
+  lecturerOnly,
+  body('title').trim().isLength({ min: 2, max: 255 }).escape(),
+  body('total_marks').isFloat({ min: 1 }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      req.session.error = errors.array()[0].msg;
+      return res.redirect('back');
+    }
+    const { module_id, pdf_note_id, title, total_marks, test_date } = req.body;
+    try {
+      const ok = await assertLecturerModule(req.user.id, module_id, res, '/lecturer/dashboard');
+      if (!ok) { req.session.error = 'Access denied.'; return res.redirect('/lecturer/dashboard'); }
+
+      // Verify the PDF belongs to this module
+      const { rows: pdfCheck } = await pool.query(
+        'SELECT 1 FROM pdf_note WHERE id=$1 AND module_id=$2 AND deleted_at IS NULL',
+        [pdf_note_id, module_id]
+      );
+      if (!pdfCheck.length) {
+        req.session.error = 'Selected lecture note not found.';
+        return res.redirect(`/lecturer/modules/${module_id}`);
+      }
+
+      const { rows: [ct] } = await pool.query(
+        `INSERT INTO class_test (module_id, pdf_note_id, created_by_user_id, title, total_marks, test_date)
+         VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+        [module_id, pdf_note_id, req.user.id, title, parseFloat(total_marks), test_date || null]
+      );
+
+      // Notify enrolled students
+      const { rows: [mod] } = await pool.query('SELECT module_name FROM module WHERE id=$1', [module_id]);
+      await notifyEnrolledStudents(
+        module_id,
+        'class_test',
+        `📝 New class test in ${mod.module_name}`,
+        `"${title}" has been added.`,
+        `/student/class-tests/${ct.id}`,
+        (uid) => `class_test:${ct.id}:${uid}`
+      );
+
+      req.session.success = `Class test "${title}" created.`;
+      res.redirect(`/lecturer/class-tests/${ct.id}`);
+    } catch (err) {
+      console.error(err);
+      req.session.error = 'Failed to create class test.';
+      res.redirect('back');
+    }
+  }
+);
+
+// GET /lecturer/class-tests/:testId — marks entry page
+router.get('/class-tests/:testId', lecturerOnly, async (req, res) => {
+  try {
+    const { rows: [ct] } = await pool.query(
+      `SELECT ct.*, m.module_name, m.id AS module_id, p.topic_name AS pdf_topic
+       FROM class_test ct
+       JOIN module m ON m.id = ct.module_id
+       JOIN pdf_note p ON p.id = ct.pdf_note_id
+       WHERE ct.id=$1 AND ct.created_by_user_id=$2`,
+      [req.params.testId, req.user.id]
+    );
+    if (!ct) { req.session.error = 'Class test not found.'; return res.redirect('/lecturer/dashboard'); }
+
+    // All enrolled students + their existing mark (if any)
+    const { rows: students } = await pool.query(
+      `SELECT u.id, u.name, u.student_number, ctm.marks_obtained
+       FROM student_enrollment se
+       JOIN "user" u ON u.id = se.student_id
+       LEFT JOIN class_test_mark ctm ON ctm.class_test_id=$1 AND ctm.student_id=u.id
+       WHERE se.module_id=$2
+       ORDER BY u.name ASC`,
+      [req.params.testId, ct.module_id]
+    );
+
+    res.render('lecturer/class-test', {
+      title: ct.title,
+      user: req.user,
+      ct,
+      students
+    });
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to load class test.';
+    res.redirect('/lecturer/dashboard');
+  }
+});
+
+// POST /lecturer/class-tests/:testId/marks — save marks (bulk upsert)
+router.post('/class-tests/:testId/marks', lecturerOnly, async (req, res) => {
+  try {
+    const { rows: [ct] } = await pool.query(
+      'SELECT * FROM class_test WHERE id=$1 AND created_by_user_id=$2',
+      [req.params.testId, req.user.id]
+    );
+    if (!ct) { req.session.error = 'Class test not found.'; return res.redirect('/lecturer/dashboard'); }
+
+    // marks is an object: { studentId: marksValue, ... }
+    const marks = req.body.marks || {};
+    for (const [studentId, rawMark] of Object.entries(marks)) {
+      const mark = parseFloat(rawMark);
+      if (isNaN(mark) || mark < 0) continue;
+      const capped = Math.min(mark, parseFloat(ct.total_marks));
+      await pool.query(
+        `INSERT INTO class_test_mark (class_test_id, student_id, marks_obtained)
+         VALUES ($1,$2,$3)
+         ON CONFLICT (class_test_id, student_id)
+         DO UPDATE SET marks_obtained=$3, recorded_at=NOW()`,
+        [ct.id, studentId, capped]
+      );
+    }
+
+    req.session.success = 'Marks saved.';
+    res.redirect(`/lecturer/class-tests/${ct.id}`);
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to save marks.';
+    res.redirect(`/lecturer/class-tests/${req.params.testId}`);
+  }
+});
+
+// DELETE /lecturer/class-tests/:testId — delete a class test
+router.delete('/class-tests/:testId', lecturerOnly, async (req, res) => {
+  try {
+    const { rows: [ct] } = await pool.query(
+      'SELECT * FROM class_test WHERE id=$1 AND created_by_user_id=$2',
+      [req.params.testId, req.user.id]
+    );
+    if (!ct) { req.session.error = 'Class test not found.'; return res.redirect('/lecturer/dashboard'); }
+    await pool.query('DELETE FROM class_test WHERE id=$1', [ct.id]);
+    req.session.success = 'Class test deleted.';
+    res.redirect(`/lecturer/modules/${ct.module_id}`);
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to delete class test.';
     res.redirect('/lecturer/dashboard');
   }
 });

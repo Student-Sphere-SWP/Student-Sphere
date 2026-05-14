@@ -1,0 +1,170 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/navbar', { user }) %>
+<%- include('../partials/flash') %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3">
+    <a href="/student/modules/<%= ct.module_id %>" class="text-gray-400 hover:text-gray-600 text-sm">← <%= ct.module_name %></a>
+    <div class="flex items-center gap-2">
+      <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: <%= ct.module_colour || '#6366f1' %>"></div>
+      <h1 class="text-xl font-bold text-gray-900"><%= ct.title %></h1>
+    </div>
+  </div>
+
+  <!-- Meta -->
+  <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+    <span>📄 Linked to: <span class="font-medium text-gray-700"><%= ct.pdf_topic %></span></span>
+    <% if (ct.test_date) { %>
+    <span>📅 <span class="font-medium text-gray-700"><%= new Date(ct.test_date).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) %></span></span>
+    <% } %>
+    <span>🎯 <span class="font-medium text-gray-700"><%= ct.title %></span></span>
+    <% if (stats.marked_count > 0) { %>
+    <span>📊 Class avg: <span class="font-medium text-gray-700"><%= stats.avg_pct %>%</span></span>
+    <% } %>
+  </div>
+
+  <!-- My Result card -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">My Result</h2>
+    <% if (!myMark) { %>
+      <div class="text-center py-8">
+        <p class="text-4xl mb-2">⏳</p>
+        <p class="text-gray-500 text-sm">Your mark hasn't been recorded yet.</p>
+        <% if (ct.pdf_note_id) { %>
+        <form method="POST" action="/student/generate-quiz" class="mt-4">
+          <input type="hidden" name="pdf_note_id" value="<%= ct.pdf_note_id %>" />
+          <input type="hidden" name="questions_count" value="10" />
+          <button type="submit" class="btn-primary text-sm">🧠 Practice the linked notes</button>
+        </form>
+        <% } %>
+      </div>
+    <% } else { %>
+    <%
+      const pct = Math.round((parseFloat(myMark.marks_obtained) / parseFloat(ct.total_marks)) * 100);
+      const grade = pct >= 75 ? { label: 'Great', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' }
+                  : pct >= 60 ? { label: 'Good', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' }
+                  : pct >= 50 ? { label: 'Average', color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' }
+                  : { label: 'Needs Work', color: 'text-red-500', bg: 'bg-red-50 border-red-200' };
+    %>
+    <div class="border rounded-2xl p-6 text-center <%= grade.bg %>">
+      <div class="mt-4 mx-auto w-48 h-3 bg-white/60 rounded-full overflow-hidden">
+        <div class="h-full rounded-full <%= pct >= 75 ? 'bg-emerald-500' : pct >= 60 ? 'bg-yellow-400' : pct >= 50 ? 'bg-orange-400' : 'bg-red-400' %>"
+             style="width: <%= pct %>%"></div>
+      </div>
+      <p class="text-2xl font-bold <%= grade.color %> mt-2"><%= pct %>%</p>
+      <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold <%= grade.color %> bg-white/60"><%= grade.label %></span>
+
+      <% if (pct < 60 && ct.pdf_note_id) { %>
+      <div class="mt-4 pt-4 border-t border-current/10">
+        <p class="text-sm text-gray-600 mb-2">Need to improve? Practise the linked topic.</p>
+        <form method="POST" action="/student/generate-quiz">
+          <input type="hidden" name="pdf_note_id" value="<%= ct.pdf_note_id %>" />
+          <input type="hidden" name="questions_count" value="10" />
+          <button type="submit" class="btn-primary text-sm">🧠 Practice Now</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Top 5 Leaderboard -->
+  <div class="card">
+    <h2 class="text-base font-semibold text-gray-800 mb-4">🏆 Top Achievers (above 60%) — <%= ct.title %></h2>
+
+    <% if (!top.length) { %>
+      <p class="text-center text-gray-400 text-sm py-6">No students have scored above 60% yet.</p>
+    <% } else { %>
+
+    <!-- Podium (top 3) -->
+    <% if (top.length >= 3) { %>
+    <div class="flex items-end justify-center gap-4 pt-2 pb-4">
+
+      <!-- 2nd -->
+      <div class="flex flex-col items-center">
+        <% if (top[1].profile_picture) { %>
+          <img src="<%= top[1].profile_picture %>" class="w-12 h-12 rounded-full object-cover ring-4 ring-gray-300 mb-1" />
+        <% } else { %>
+          <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold ring-4 ring-gray-300 mb-1">
+            <%= top[1].name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <p class="text-xs font-semibold text-gray-700 max-w-[72px] truncate text-center"><%= top[1].name %></p>
+        <% if (top[1].student_number) { %><p class="text-[10px] text-gray-400 text-center"><%= top[1].student_number %></p><% } %>
+        <p class="text-sm font-bold text-gray-500"><%= top[1].pct %>%</p>
+        <div class="w-16 h-14 bg-gray-200 rounded-t-lg flex items-center justify-center mt-1"><span class="text-xl">🥈</span></div>
+      </div>
+
+      <!-- 1st -->
+      <div class="flex flex-col items-center -mb-2">
+        <div class="text-2xl mb-1">👑</div>
+        <% if (top[0].profile_picture) { %>
+          <img src="<%= top[0].profile_picture %>" class="w-16 h-16 rounded-full object-cover ring-4 ring-yellow-400 mb-1" />
+        <% } else { %>
+          <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-700 font-bold text-xl ring-4 ring-yellow-400 mb-1">
+            <%= top[0].name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <p class="text-xs font-bold text-gray-800 max-w-[88px] truncate text-center"><%= top[0].name %></p>
+        <% if (top[0].student_number) { %><p class="text-[10px] text-gray-400 text-center"><%= top[0].student_number %></p><% } %>
+        <p class="text-base font-extrabold text-yellow-600"><%= top[0].pct %>%</p>
+        <div class="w-20 h-20 bg-yellow-400 rounded-t-lg flex items-center justify-center mt-1"><span class="text-2xl">🥇</span></div>
+      </div>
+
+      <!-- 3rd -->
+      <div class="flex flex-col items-center">
+        <% if (top[2].profile_picture) { %>
+          <img src="<%= top[2].profile_picture %>" class="w-12 h-12 rounded-full object-cover ring-4 ring-amber-600 mb-1" />
+        <% } else { %>
+          <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold ring-4 ring-amber-600 mb-1">
+            <%= top[2].name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <p class="text-xs font-semibold text-gray-700 max-w-[72px] truncate text-center"><%= top[2].name %></p>
+        <% if (top[2].student_number) { %><p class="text-[10px] text-gray-400 text-center"><%= top[2].student_number %></p><% } %>
+        <p class="text-sm font-bold text-amber-700"><%= top[2].pct %>%</p>
+        <div class="w-16 h-10 bg-amber-600 rounded-t-lg flex items-center justify-center mt-1"><span class="text-xl">🥉</span></div>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Full list -->
+    <div class="divide-y divide-gray-50">
+      <% top.forEach((s, i) => { %>
+      <div class="flex items-center gap-4 py-3 <%= s.id == user.id ? 'bg-indigo-50 -mx-6 px-6 rounded-xl' : '' %>">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-xs
+          <%= i===0?'bg-yellow-400 text-white':i===1?'bg-gray-300 text-gray-700':i===2?'bg-amber-500 text-white':'bg-gray-100 text-gray-500' %>">
+          <%= i+1 %>
+        </div>
+        <% if (s.profile_picture) { %>
+          <img src="<%= s.profile_picture %>" class="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+        <% } else { %>
+          <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">
+            <%= s.name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-900 truncate">
+            <%= s.name %><% if (s.id == user.id) { %> <span class="text-xs text-indigo-500 font-normal">(you)</span><% } %>
+          </p>
+          <% if (s.student_number) { %><p class="text-xs text-gray-400"><%= s.student_number %></p><% } %>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <div class="hidden sm:block w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full
+              <%= parseFloat(s.pct)>=75?'bg-emerald-500':parseFloat(s.pct)>=50?'bg-yellow-400':'bg-red-400' %>"
+              style="width:<%= s.pct %>%"></div>
+          </div>
+          <span class="text-sm font-bold text-gray-700"><%= s.pct %>%</span>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

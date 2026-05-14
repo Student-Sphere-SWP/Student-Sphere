@@ -124,7 +124,7 @@ router.get('/modules/:moduleId', studentOnly, async (req, res) => {
       return res.redirect('/student/modules');
     }
 
-    const [moduleRes, pdfs, announcements, messages, manualQuizzes] = await Promise.all([
+    const [moduleRes, pdfs, announcements, messages, manualQuizzes, classTests] = await Promise.all([
       pool.query('SELECT * FROM module WHERE id = $1 AND deleted_at IS NULL', [req.params.moduleId]),
       pool.query(
         `SELECT pn.*, u.name as uploader_name FROM pdf_note pn
@@ -150,6 +150,16 @@ router.get('/modules/:moduleId', studentOnly, async (req, res) => {
          LEFT JOIN manual_quiz_question mqq ON mqq.quiz_id = mq.id
          WHERE mq.module_id = $1 GROUP BY mq.id ORDER BY mq.created_at DESC`,
         [req.params.moduleId]
+      ),
+      pool.query(
+        `SELECT ct.*, p.topic_name AS pdf_topic,
+           ctm.marks_obtained AS my_mark
+         FROM class_test ct
+         JOIN pdf_note p ON p.id = ct.pdf_note_id
+         LEFT JOIN class_test_mark ctm ON ctm.class_test_id = ct.id AND ctm.student_id = $2
+         WHERE ct.module_id = $1
+         ORDER BY ct.test_date DESC NULLS LAST, ct.created_at DESC`,
+        [req.params.moduleId, req.user.id]
       )
     ]);
 
@@ -165,7 +175,8 @@ router.get('/modules/:moduleId', studentOnly, async (req, res) => {
       pdfs:          pdfs.rows,
       announcements: announcements.rows,
       messages:      messages.rows,
-      manualQuizzes: manualQuizzes.rows
+      manualQuizzes: manualQuizzes.rows,
+      classTests:    classTests.rows
     });
   } catch (err) {
     console.error(err);
@@ -393,47 +404,142 @@ router.post('/manual-quiz/:quizId/submit', studentOnly, async (req, res) => {
   }
 });
 
-// ── Progress ──────────────────────────────────────────────────────────────────
-router.get('/progress', studentOnly, async (req, res) => {
+// ── Progress / My Improvement ─────────────────────────────────────────────────
+router.get('/improvement', studentOnly, async (req, res) => {
   try {
-    const [topicProgress, progressOverTime] = await Promise.all([
+    const [topicProgress, progressOverTime, statsRow, streakRow, classTestStats, classTestResults, topicTrends] = await Promise.all([
+
+      // Per-topic aggregates + pdf_note_id for practice button
       pool.query(
         `SELECT a.topic_name, a.module_id, m.module_name, m.colour,
            ROUND(AVG(a.score_percentage), 1) AS avg_score,
            COUNT(*) AS attempts,
-           MAX(a.attempted_at) AS last_attempt
+           MAX(a.attempted_at) AS last_attempt,
+           (SELECT pn.id FROM pdf_note pn
+            WHERE pn.topic_name = a.topic_name AND pn.module_id = a.module_id
+              AND pn.deleted_at IS NULL LIMIT 1) AS pdf_note_id
          FROM ai_quiz_attempt a JOIN module m ON m.id = a.module_id
          WHERE a.student_id = $1
          GROUP BY a.topic_name, a.module_id, m.module_name, m.colour
          ORDER BY m.module_name, a.topic_name`,
         [req.user.id]
       ),
+
+      // 30-day score trend (both quiz types combined)
       pool.query(
         `SELECT DATE(attempted_at) AS day, ROUND(AVG(score_percentage), 1) AS avg_score
-         FROM ai_quiz_attempt
-         WHERE student_id = $1 AND attempted_at >= NOW() - INTERVAL '30 days'
+         FROM (
+           SELECT attempted_at, score_percentage FROM ai_quiz_attempt WHERE student_id=$1
+           UNION ALL
+           SELECT attempted_at, score_percentage FROM adaptive_quiz_attempt WHERE student_id=$1
+         ) all_a
+         WHERE attempted_at >= NOW() - INTERVAL '30 days'
          GROUP BY DATE(attempted_at) ORDER BY day`,
+        [req.user.id]
+      ),
+
+      // Overall stats across both quiz types
+      pool.query(
+        `SELECT COUNT(*) AS total_quizzes,
+                ROUND(AVG(score_percentage), 1) AS overall_avg
+         FROM (
+           SELECT score_percentage FROM ai_quiz_attempt WHERE student_id=$1
+           UNION ALL
+           SELECT score_percentage FROM adaptive_quiz_attempt WHERE student_id=$1
+         ) all_a`,
+        [req.user.id]
+      ),
+
+      // Streak: consecutive days of activity ending from latest active day
+      pool.query(
+        `WITH days AS (
+           SELECT DISTINCT d FROM (
+             SELECT DATE(attempted_at) AS d FROM ai_quiz_attempt WHERE student_id=$1
+             UNION
+             SELECT DATE(attempted_at) AS d FROM adaptive_quiz_attempt WHERE student_id=$1
+           ) all_days ORDER BY d DESC
+         ),
+         numbered AS (
+           SELECT d, ROW_NUMBER() OVER (ORDER BY d DESC) AS rn FROM days
+         ),
+         anchor AS (SELECT d AS start_day FROM days LIMIT 1)
+         SELECT COUNT(*) AS streak_days
+         FROM numbered, anchor
+         WHERE d = (anchor.start_day - (rn - 1)::int)`,
+        [req.user.id]
+      ),
+
+      // Class test: overall avg%
+      pool.query(
+        `SELECT ROUND(AVG(ctm.marks_obtained / ct.total_marks * 100), 1) AS avg_pct,
+                COUNT(*) AS test_count
+         FROM class_test_mark ctm
+         JOIN class_test ct ON ct.id = ctm.class_test_id
+         WHERE ctm.student_id = $1`,
+        [req.user.id]
+      ),
+
+      // Class test: individual results (most recent 10)
+      pool.query(
+        `SELECT ct.id, ct.title, ct.test_date, m.module_name,
+                ROUND(ctm.marks_obtained / ct.total_marks * 100, 1) AS pct
+         FROM class_test_mark ctm
+         JOIN class_test ct ON ct.id = ctm.class_test_id
+         JOIN module m ON m.id = ct.module_id
+         WHERE ctm.student_id = $1
+         ORDER BY ct.test_date DESC NULLS LAST, ct.created_at DESC
+         LIMIT 10`,
+        [req.user.id]
+      ),
+
+      // Per-topic first vs latest score (trend arrows)
+      pool.query(
+        `WITH first_sc AS (
+           SELECT topic_name, module_id, score_percentage,
+                  ROW_NUMBER() OVER (PARTITION BY topic_name, module_id ORDER BY attempted_at ASC) AS rn
+           FROM ai_quiz_attempt WHERE student_id=$1
+         ),
+         latest_sc AS (
+           SELECT topic_name, module_id, score_percentage,
+                  ROW_NUMBER() OVER (PARTITION BY topic_name, module_id ORDER BY attempted_at DESC) AS rn
+           FROM ai_quiz_attempt WHERE student_id=$1
+         )
+         SELECT f.topic_name, f.module_id,
+                f.score_percentage AS first_score,
+                l.score_percentage AS latest_score
+         FROM first_sc f
+         JOIN latest_sc l ON l.topic_name=f.topic_name AND l.module_id=f.module_id AND l.rn=1
+         WHERE f.rn=1`,
         [req.user.id]
       )
     ]);
 
-    const getMastery = (score) => {
-      if (score >= 85) return { label: 'Mastered',      color: 'green-800',  bg: 'green-100'  };
-      if (score >= 70) return { label: 'Proficient',    color: 'green-600',  bg: 'green-50'   };
-      if (score >= 50) return { label: 'Getting There', color: 'yellow-600', bg: 'yellow-50'  };
-      return                  { label: 'Need Practice', color: 'red-600',    bg: 'red-50'     };
-    };
+    // Build trend lookup: "topicName|moduleId" → diff
+    const trendMap = {};
+    topicTrends.rows.forEach(r => {
+      const key = `${r.topic_name}|${r.module_id}`;
+      const diff = parseFloat(r.latest_score) - parseFloat(r.first_score);
+      trendMap[key] = +diff.toFixed(1);
+    });
 
-    const topicsWithMastery = topicProgress.rows.map(t => ({
-      ...t,
-      mastery: getMastery(parseFloat(t.avg_score))
-    }));
+    const topics = topicProgress.rows.map(t => {
+      const key = `${t.topic_name}|${t.module_id}`;
+      return { ...t, trendDiff: trendMap[key] !== undefined ? trendMap[key] : null };
+    });
+
+    const stats    = statsRow.rows[0]    || { total_quizzes: 0, overall_avg: null };
+    const streak   = parseInt(streakRow.rows[0]?.streak_days || 0);
+    const ctStats  = classTestStats.rows[0] || { avg_pct: null, test_count: 0 };
 
     res.render('student/progress', {
-      title: 'My Progress',
-      user:            req.user,
-      topics:          topicsWithMastery,
-      progressOverTime: progressOverTime.rows
+      title: 'My Improvement',
+      user:  req.user,
+      topics,
+      progressOverTime: progressOverTime.rows,
+      stats,
+      streak,
+      ctStats,
+      classTestResults: classTestResults.rows
     });
   } catch (err) {
     console.error(err);
@@ -901,84 +1007,6 @@ router.post('/profile',
   }
 );
 
-// ── Improvement Tracking (score trajectory + class average) ─────────────────
-router.get('/improvement', studentOnly, async (req, res) => {
-  try {
-    const moduleId = req.query.module_id || null;
-
-    // My attempts per week per topic
-    const myTrajectory = await pool.query(
-      `SELECT
-         topic_name,
-         module_id,
-         m.module_name,
-         DATE_TRUNC('week', attempted_at)     AS week,
-         ROUND(AVG(score_percentage), 1)      AS avg_score,
-         COUNT(*)                             AS attempt_count
-       FROM ai_quiz_attempt a
-       JOIN module m ON m.id = a.module_id
-       WHERE a.student_id=$1
-         ${moduleId ? 'AND a.module_id=$2' : ''}
-       GROUP BY topic_name, a.module_id, m.module_name, DATE_TRUNC('week', attempted_at)
-       ORDER BY a.module_id, topic_name, week ASC`,
-      moduleId ? [req.user.id, moduleId] : [req.user.id]
-    );
-
-    // Class average per topic (same module filter, all students, anonymised)
-    const classAvg = await pool.query(
-      `SELECT
-         topic_name,
-         module_id,
-         ROUND(AVG(score_percentage), 1) AS class_avg,
-         COUNT(DISTINCT student_id)      AS student_count
-       FROM ai_quiz_attempt
-       WHERE 1=1
-         ${moduleId ? 'AND module_id=$1' : ''}
-       GROUP BY topic_name, module_id`,
-      moduleId ? [moduleId] : []
-    );
-
-    // Enrolled modules for filter dropdown
-    const { rows: modules } = await pool.query(
-      `SELECT m.* FROM student_enrollment se JOIN module m ON m.id = se.module_id
-       WHERE se.student_id=$1 AND m.deleted_at IS NULL ORDER BY m.module_name`,
-      [req.user.id]
-    );
-
-    // Build a map: topic → { weeks: [{week, avg_score}], classAvg }
-    const trajectoryMap = {};
-    for (const row of myTrajectory.rows) {
-      const key = `${row.module_id}:${row.topic_name}`;
-      if (!trajectoryMap[key]) {
-        trajectoryMap[key] = {
-          topic_name: row.topic_name,
-          module_name: row.module_name,
-          module_id: row.module_id,
-          weeks: [],
-          class_avg: null
-        };
-      }
-      trajectoryMap[key].weeks.push({ week: row.week, avg_score: parseFloat(row.avg_score) });
-    }
-    for (const row of classAvg.rows) {
-      const key = `${row.module_id}:${row.topic_name}`;
-      if (trajectoryMap[key]) trajectoryMap[key].class_avg = parseFloat(row.class_avg);
-    }
-
-    res.render('student/improvement', {
-      title: 'My Improvement',
-      user: req.user,
-      topics: Object.values(trajectoryMap),
-      modules,
-      selectedModuleId: moduleId
-    });
-  } catch (err) {
-    console.error(err);
-    req.session.error = 'Failed to load improvement data.';
-    res.redirect('/student/dashboard');
-  }
-});
-
 // ── On-Demand Practice: browse notes by keyword/topic ────────────────────────
 router.get('/practice', studentOnly, async (req, res) => {
   try {
@@ -1037,56 +1065,149 @@ router.get('/practice', studentOnly, async (req, res) => {
 // ── Leaderboard ───────────────────────────────────────────────────────────────
 router.get('/leaderboard', studentOnly, async (req, res) => {
   try {
-    // Top 5 students by combined average across both quiz types
-    // Weight each attempt equally; combine ai + manual attempts, average per student
-    const { rows: top } = await pool.query(
-      `SELECT u.id, u.name, u.profile_picture,
-         ROUND(AVG(score_percentage), 1) AS avg_score,
-         COUNT(*)                        AS total_attempts
-       FROM (
-         SELECT student_id, score_percentage FROM ai_quiz_attempt
-         UNION ALL
-         SELECT student_id, score_percentage FROM manual_quiz_attempt
-       ) all_attempts
-       JOIN "user" u ON u.id = all_attempts.student_id
-       WHERE score_percentage IS NOT NULL
-       GROUP BY u.id, u.name, u.profile_picture
-       HAVING COUNT(*) >= 1
-       ORDER BY avg_score DESC, total_attempts DESC
-       LIMIT 5`
-    );
+    const moduleId = req.query.module_id || null;
 
-    // Also fetch the current student's own rank for context
-    const { rows: rankRows } = await pool.query(
-      `SELECT rank, avg_score, total_attempts FROM (
-         SELECT u.id,
-           RANK() OVER (ORDER BY AVG(score_percentage) DESC, COUNT(*) DESC) AS rank,
-           ROUND(AVG(score_percentage), 1) AS avg_score,
-           COUNT(*) AS total_attempts
-         FROM (
-           SELECT student_id, score_percentage FROM ai_quiz_attempt
-           UNION ALL
-           SELECT student_id, score_percentage FROM manual_quiz_attempt
-         ) all_attempts
-         JOIN "user" u ON u.id = all_attempts.student_id
-         WHERE score_percentage IS NOT NULL
-         GROUP BY u.id
-       ) ranked
-       WHERE id = $1`,
+    // Modules this student is enrolled in (for the selector)
+    const { rows: modules } = await pool.query(
+      `SELECT m.id, m.module_name, m.module_code, m.colour
+       FROM student_enrollment se JOIN module m ON m.id = se.module_id
+       WHERE se.student_id = $1 AND m.deleted_at IS NULL
+       ORDER BY m.module_name`,
       [req.user.id]
     );
 
-    const myRank = rankRows[0] || null;
+    // If a module_id is provided, verify the student is enrolled
+    if (moduleId && !modules.find(m => m.id === moduleId)) {
+      req.session.error = 'Module not found or not enrolled.';
+      return res.redirect('/student/leaderboard');
+    }
+
+    let top = [];
+    let myRank = null;
+
+    if (moduleId) {
+      // Top 5 for this specific module (ai + manual attempts for that module)
+      const { rows } = await pool.query(
+        `SELECT u.id, u.name, u.profile_picture,
+           ROUND(AVG(a.score_percentage), 1) AS avg_score,
+           COUNT(*) AS total_attempts
+         FROM (
+           SELECT student_id, score_percentage FROM ai_quiz_attempt WHERE module_id = $1
+           UNION ALL
+           SELECT mqa.student_id, mqa.score_percentage
+           FROM manual_quiz_attempt mqa
+           JOIN manual_quiz mq ON mq.id = mqa.quiz_id
+           WHERE mq.module_id = $1
+         ) a
+         JOIN "user" u ON u.id = a.student_id
+         WHERE a.score_percentage IS NOT NULL
+         GROUP BY u.id, u.name, u.profile_picture
+         ORDER BY avg_score DESC, total_attempts DESC
+         LIMIT 5`,
+        [moduleId]
+      );
+      top = rows;
+
+      // Current student's rank for this module
+      const { rows: rankRows } = await pool.query(
+        `SELECT rank, avg_score, total_attempts FROM (
+           SELECT u.id,
+             RANK() OVER (ORDER BY AVG(a.score_percentage) DESC, COUNT(*) DESC) AS rank,
+             ROUND(AVG(a.score_percentage), 1) AS avg_score,
+             COUNT(*) AS total_attempts
+           FROM (
+             SELECT student_id, score_percentage FROM ai_quiz_attempt WHERE module_id = $1
+             UNION ALL
+             SELECT mqa.student_id, mqa.score_percentage
+             FROM manual_quiz_attempt mqa
+             JOIN manual_quiz mq ON mq.id = mqa.quiz_id
+             WHERE mq.module_id = $1
+           ) a
+           JOIN "user" u ON u.id = a.student_id
+           WHERE a.score_percentage IS NOT NULL
+           GROUP BY u.id
+         ) ranked
+         WHERE id = $2`,
+        [moduleId, req.user.id]
+      );
+      myRank = rankRows[0] || null;
+    }
+
+    const selectedModule = moduleId ? modules.find(m => m.id === moduleId) : null;
 
     res.render('student/leaderboard', {
       title: 'Top Achievers',
       user: req.user,
+      modules,
+      selectedModule,
       top,
       myRank
     });
   } catch (err) {
     console.error(err);
     req.session.error = 'Failed to load leaderboard.';
+    res.redirect('/student/dashboard');
+  }
+});
+
+// ── Class Test (student view) ─────────────────────────────────────────────────
+router.get('/class-tests/:testId', studentOnly, async (req, res) => {
+  try {
+    // Load the test + verify the student is enrolled in that module
+    const { rows: [ct] } = await pool.query(
+      `SELECT ct.*, m.module_name, m.id AS module_id, m.colour AS module_colour,
+              p.topic_name AS pdf_topic, p.id AS pdf_note_id
+       FROM class_test ct
+       JOIN module m ON m.id = ct.module_id
+       JOIN pdf_note p ON p.id = ct.pdf_note_id
+       JOIN student_enrollment se ON se.module_id = ct.module_id AND se.student_id = $2
+       WHERE ct.id = $1`,
+      [req.params.testId, req.user.id]
+    );
+    if (!ct) { req.session.error = 'Class test not found.'; return res.redirect('/student/dashboard'); }
+
+    // Student's own mark
+    const { rows: [myMark] } = await pool.query(
+      'SELECT marks_obtained FROM class_test_mark WHERE class_test_id=$1 AND student_id=$2',
+      [ct.id, req.user.id]
+    );
+
+    // Top 5 leaderboard — only students above 60%, identified by student number + name
+    const { rows: top } = await pool.query(
+      `SELECT u.id, u.name, u.student_number, u.profile_picture,
+              ctm.marks_obtained,
+              ROUND((ctm.marks_obtained / ct.total_marks) * 100, 1) AS pct
+       FROM class_test_mark ctm
+       JOIN "user" u ON u.id = ctm.student_id
+       JOIN class_test ct ON ct.id = ctm.class_test_id
+       WHERE ctm.class_test_id = $1
+         AND (ctm.marks_obtained / ct.total_marks) * 100 > 60
+       ORDER BY ctm.marks_obtained DESC
+       LIMIT 5`,
+      [ct.id]
+    );
+
+    // Class average (as percentage)
+    const { rows: [stats] } = await pool.query(
+      `SELECT ROUND(AVG(marks_obtained / ct.total_marks) * 100, 1) AS avg_pct,
+              COUNT(*) AS marked_count
+       FROM class_test_mark ctm
+       JOIN class_test ct ON ct.id = ctm.class_test_id
+       WHERE ctm.class_test_id=$1`,
+      [ct.id]
+    );
+
+    res.render('student/class-test', {
+      title: ct.title,
+      user: req.user,
+      ct,
+      myMark: myMark || null,
+      top,
+      stats
+    });
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to load class test.';
     res.redirect('/student/dashboard');
   }
 });
