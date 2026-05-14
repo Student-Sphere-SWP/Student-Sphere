@@ -405,6 +405,7 @@ router.post('/manual-quiz/:quizId/submit', studentOnly, async (req, res) => {
 });
 
 // ── Progress / My Improvement ─────────────────────────────────────────────────
+router.get('/progress', studentOnly, (req, res) => res.redirect('/student/improvement'));
 router.get('/improvement', studentOnly, async (req, res) => {
   try {
     const [topicProgress, progressOverTime, statsRow, streakRow, classTestStats, classTestResults, topicTrends] = await Promise.all([
