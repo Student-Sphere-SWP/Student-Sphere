@@ -73,30 +73,94 @@ router.get('/analytics/:moduleId', mentorOnly, async (req, res) => {
     const ok = await assertMentorModule(req.user.id, req.params.moduleId);
     if (!ok) { req.session.error = 'Access denied.'; return res.redirect('/mentor/dashboard'); }
 
-    const [moduleRes, topicStats, recentScores] = await Promise.all([
-      pool.query('SELECT * FROM module WHERE id = $1', [req.params.moduleId]),
+    const mid = req.params.moduleId;
+    const tid = req.user.id;
+
+    const [moduleRes, statsRes, ratingRes, topicStats, recentScores, sessionSummary, recentSessions] = await Promise.all([
+      pool.query('SELECT * FROM module WHERE id = $1', [mid]),
+
+      // Quiz stats for this module
+      pool.query(
+        `SELECT
+           (SELECT COUNT(*) FROM student_enrollment WHERE module_id = $1) AS total_students,
+           (SELECT COUNT(*) FROM ai_quiz_attempt WHERE module_id = $1)    AS total_attempts,
+           (SELECT ROUND(AVG(score_percentage),1) FROM ai_quiz_attempt WHERE module_id = $1) AS avg_score`,
+        [mid]
+      ),
+
+      // This tutor's average rating
+      pool.query(
+        `SELECT ROUND(AVG(rating),1) AS avg_rating FROM tutor_rating WHERE tutor_id = $1`,
+        [tid]
+      ),
+
+      // Topic breakdown
       pool.query(
         `SELECT topic_name,
            ROUND(AVG(score_percentage), 1) AS avg_score,
-           COUNT(*) AS attempt_count
+           COUNT(*) AS attempts,
+           MAX(score_percentage) AS top_score
          FROM ai_quiz_attempt WHERE module_id = $1
          GROUP BY topic_name ORDER BY avg_score ASC`,
-        [req.params.moduleId]
+        [mid]
       ),
+
+      // Recent quiz scores
       pool.query(
         `SELECT a.attempted_at, a.score_percentage, a.topic_name, u.name AS student_name
          FROM ai_quiz_attempt a JOIN "user" u ON u.id = a.student_id
-         WHERE a.module_id = $1 ORDER BY a.attempted_at DESC LIMIT 30`,
-        [req.params.moduleId]
+         WHERE a.module_id = $1 ORDER BY a.attempted_at DESC LIMIT 10`,
+        [mid]
+      ),
+
+      // Session totals for this tutor + module
+      pool.query(
+        `SELECT
+           COUNT(*)                                                              AS total_sessions,
+           COALESCE(SUM(rsvp_count), 0)                                         AS total_rsvps,
+           COALESCE(SUM(attended_count), 0)                                     AS total_attended
+         FROM (
+           SELECT ts.id,
+             COUNT(sr.id) FILTER (WHERE sr.rsvp_status = 'rsvpd') AS rsvp_count,
+             COUNT(sr.id) FILTER (WHERE sr.attended = true)        AS attended_count
+           FROM tutorial_session ts
+           LEFT JOIN session_rsvp sr ON sr.session_id = ts.id
+           WHERE ts.tutor_id = $1 AND ts.module_id = $2
+           GROUP BY ts.id
+         ) sub`,
+        [tid, mid]
+      ),
+
+      // Per-session breakdown
+      pool.query(
+        `SELECT ts.topic, ts.date_time, ts.capacity,
+           COUNT(sr.id) FILTER (WHERE sr.rsvp_status = 'rsvpd') AS rsvp_count,
+           COUNT(sr.id) FILTER (WHERE sr.attended = true)        AS attended_count
+         FROM tutorial_session ts
+         LEFT JOIN session_rsvp sr ON sr.session_id = ts.id
+         WHERE ts.tutor_id = $1 AND ts.module_id = $2
+         GROUP BY ts.id, ts.topic, ts.date_time, ts.capacity
+         ORDER BY ts.date_time DESC LIMIT 10`,
+        [tid, mid]
       )
     ]);
 
+    const s = statsRes.rows[0];
     res.render('mentor/analytics', {
-      title: 'Module Analytics',
-      user:         req.user,
-      module:       moduleRes.rows[0],
-      topicStats:   topicStats.rows,
-      recentScores: recentScores.rows
+      title:          'Module Analytics',
+      user:           req.user,
+      module:         moduleRes.rows[0],
+      moduleName:     moduleRes.rows[0]?.module_name,
+      stats: {
+        totalStudents: s.total_students,
+        totalAttempts: s.total_attempts,
+        avgScore:      s.avg_score,
+        avgRating:     ratingRes.rows[0]?.avg_rating
+      },
+      sessionSummary: sessionSummary.rows[0],
+      topicStats:     topicStats.rows,
+      recentScores:   recentScores.rows,
+      recentSessions: recentSessions.rows
     });
   } catch (err) {
     console.error(err);

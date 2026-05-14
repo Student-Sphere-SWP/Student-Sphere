@@ -2,19 +2,18 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="max-w-2xl mx-auto space-y-6">
-  <div class="flex items-center gap-3">
-    <a href="/admin/users" class="text-gray-400 hover:text-gray-600">← Users</a>
-    <span class="text-gray-300">/</span>
-    <h1 class="text-2xl font-bold text-gray-900">Edit User</h1>
+<div style="max-width:700px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+    <a href="/admin/users" style="color:#a78bfa;font-size:13px;font-weight:600;text-decoration:none;">← Users</a>
+    <span style="color:#475569;">/</span>
+    <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0;letter-spacing:-0.5px;">Edit User</h1>
   </div>
 
   <div class="card">
     <form method="POST" action="/admin/users/<%= editUser.id %>?_method=PUT" enctype="multipart/form-data" class="space-y-5">
 
-      <!-- Avatar -->
       <div class="flex items-center gap-4">
-        <div id="avatar-preview" class="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center">
+        <div id="avatar-preview" style="width:64px;height:64px;border-radius:50%;border:2px dashed rgba(255,255,255,0.2);overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(20,16,38,0.6);">
           <% if (editUser.profile_picture) { %>
             <img src="<%= editUser.profile_picture %>" class="w-full h-full object-cover rounded-full" alt="" />
           <% } else { %>

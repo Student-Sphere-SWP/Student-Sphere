@@ -1,13 +1,13 @@
 <%- include('../partials/head', { title: 'Server Error' }) %>
-<div class="min-h-screen flex items-center justify-center bg-gray-50">
-  <div class="text-center">
-    <h1 class="text-8xl font-bold text-red-200">500</h1>
-    <h2 class="text-2xl font-semibold text-gray-800 mt-4">Something went wrong</h2>
-    <p class="text-gray-500 mt-2">An unexpected error occurred. Please try again.</p>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:rgba(12,10,24,0.97);">
+  <div style="text-align:center;">
+    <h1 style="font-size:96px;font-weight:800;color:rgba(239,68,68,0.3);margin:0;line-height:1;">500</h1>
+    <h2 style="font-size:24px;font-weight:700;color:#f8fafc;margin:16px 0 8px 0;">Something went wrong</h2>
+    <p style="color:#64748b;font-size:14px;margin:0 0 24px 0;">An unexpected error occurred. Please try again.</p>
     <% if (typeof error !== 'undefined' && process && process.env && process.env.NODE_ENV !== 'production') { %>
-      <pre class="mt-4 text-left bg-gray-100 p-4 rounded text-xs text-red-700 max-w-lg mx-auto overflow-auto"><%= error %></pre>
+      <pre style="margin:16px auto;text-align:left;background:rgba(20,16,38,0.8);border:1px solid rgba(239,68,68,0.2);padding:16px;border-radius:12px;font-size:12px;color:#fca5a5;max-width:600px;overflow:auto;"><%= error %></pre>
     <% } %>
-    <a href="javascript:history.back()" class="btn-primary mt-6 inline-flex">Go back</a>
+    <a href="javascript:history.back()" class="btn-primary" style="display:inline-flex;">Go back</a>
   </div>
 </div>
 </body></html>

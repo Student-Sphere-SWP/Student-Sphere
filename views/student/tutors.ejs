@@ -1,14 +1,14 @@
 <%- include('../partials/head', { title }) %>
 <%- include('../partials/navbar', { user }) %>
 
-<div class="space-y-6">
-  <h1 class="text-2xl font-bold text-gray-900">Find a Tutor</h1>
-  <p class="text-gray-500 text-sm">Mentors for your enrolled modules.</p>
+<div style="max-width:1200px;margin:0 auto;">
+  <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0 0 6px 0;letter-spacing:-0.5px;">Find a Tutor</h1>
+  <p style="color:#64748b;font-size:14px;margin:0 0 24px 0;">Mentors for your enrolled modules.</p>
 
   <% if (!tutors.length) { %>
-    <div class="card text-center py-12 text-gray-400">
-      <p class="text-4xl mb-3">🎓</p>
-      <p>No tutors available for your current modules.</p>
+    <div style="text-align:center;padding:60px 20px;">
+      <span style="font-size:48px;display:block;margin-bottom:16px;">🎓</span>
+      <p style="color:#94a3b8;font-size:16px;font-weight:600;">No tutors available for your current modules.</p>
     </div>
   <% } else { %>
   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -24,7 +24,6 @@
       <div class="min-w-0">
         <p class="text-sm font-semibold text-gray-800 group-hover:text-primary-600 transition-colors"><%= t.name %></p>
         <% if (t.bio) { %><p class="text-xs text-gray-400 line-clamp-2 mt-0.5"><%= t.bio %></p><% } %>
-        <!-- Modules -->
         <%
           const moduleList = Array.isArray(t.modules)
             ? t.modules
@@ -37,7 +36,6 @@
           <span class="badge bg-purple-100 text-purple-700"><%= m %></span>
           <% }) %>
         </div>
-        <!-- Rating -->
         <div class="flex items-center gap-1 mt-2">
           <% const avg = parseFloat(t.avg_rating) || 0; %>
           <% for (let i = 1; i <= 5; i++) { %>

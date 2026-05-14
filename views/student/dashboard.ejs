@@ -2,140 +2,119 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<style>
-  .hero-banner {
-    background-image:
-      linear-gradient(135deg, rgba(79,70,229,0.82) 0%, rgba(99,102,241,0.65) 50%, rgba(16,185,129,0.55) 100%),
-      url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1600&q=80');
-    background-size: cover;
-    background-position: center 40%;
-  }
-  .glass-card {
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.25);
-  }
-  .score-bar { transition: width 0.6s ease; }
-</style>
+<div style="max-width:1200px;margin:0 auto;">
 
-<div class="space-y-6">
-
-  <!-- Hero banner -->
-  <div class="hero-banner rounded-2xl overflow-hidden shadow-lg">
-    <div class="px-8 py-10 flex flex-wrap items-center justify-between gap-6">
-      <div class="text-white">
-        <p class="text-sm font-medium text-indigo-200 mb-1">Welcome back 👋</p>
-        <h1 class="text-3xl font-extrabold tracking-tight"><%= user.name.split(' ')[0] %></h1>
-        <p class="text-indigo-100 text-sm mt-1">Keep going — you're making great progress!</p>
-        <div class="flex gap-3 mt-5">
-          <a href="/student/modules" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-indigo-700 text-sm font-semibold rounded-xl shadow hover:bg-indigo-50 transition-colors">
-            📚 Browse Modules
-          </a>
-          <a href="/student/progress" class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white text-sm font-semibold rounded-xl border border-white/30 hover:bg-white/30 transition-colors">
-            📊 My Progress
-          </a>
-          <a href="/student/adaptive-quiz" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl shadow hover:bg-emerald-400 transition-colors">
-            🧠 Adaptive Quiz
-          </a>
-          <a href="/student/improvement" class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white text-sm font-semibold rounded-xl border border-white/30 hover:bg-white/30 transition-colors">
-            📊 Improvement
-          </a>
-          <a href="/student/practice" class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white text-sm font-semibold rounded-xl border border-white/30 hover:bg-white/30 transition-colors">
-            🎯 Practice
-          </a>
+  <!-- Header -->
+  <div style="position:relative;background:rgba(15,12,30,0.75);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:32px 40px;margin-bottom:24px;overflow:hidden;">
+    <div style="position:absolute;top:-80px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(139,92,246,0.1) 0%,transparent 70%);border-radius:50%;"></div>
+    <div style="position:absolute;bottom:-60px;left:20%;width:160px;height:160px;background:radial-gradient(circle,rgba(59,130,246,0.06) 0%,transparent 70%);border-radius:50%;"></div>
+    <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:10px;height:10px;background:#a78bfa;border-radius:50%;box-shadow:0 0 14px rgba(167,139,250,0.6);"></div>
+          <p style="font-size:13px;font-weight:700;color:#c4b5fd;text-transform:uppercase;letter-spacing:2.5px;margin:0;">Student Portal</p>
+        </div>
+        <h1 style="font-size:38px;font-weight:800;color:#ffffff;margin:0;letter-spacing:-1px;line-height:1.1;">Welcome back</h1>
+        <p style="font-size:20px;color:#e2e8f0;margin:6px 0 0 0;font-weight:600;"><%= user.name %></p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;">
+          <a href="/student/modules" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 4px 16px rgba(124,58,237,0.4);">📚 Browse Modules</a>
+          <a href="/student/improvement" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#f1f5f9;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;">📈 My Improvement</a>
+          <a href="/student/adaptive-quiz" style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;">🧠 Adaptive Quiz</a>
         </div>
       </div>
-
-      <!-- Glassy stat pills -->
-      <div class="grid grid-cols-2 gap-3 min-w-[260px]">
-        <div class="glass-card rounded-xl p-4 text-white text-center">
-          <p class="text-2xl font-extrabold"><%= modules.length %></p>
-          <p class="text-xs text-indigo-100 mt-0.5">Modules</p>
+      <!-- Stat pills -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-width:220px;">
+        <div style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.25);border-radius:16px;padding:16px;text-align:center;">
+          <p style="font-size:28px;font-weight:800;color:#fff;margin:0;"><%= modules.length %></p>
+          <p style="font-size:11px;color:#c4b5fd;margin:4px 0 0 0;font-weight:600;">Modules</p>
         </div>
-        <div class="glass-card rounded-xl p-4 text-white text-center">
-          <p class="text-2xl font-extrabold"><%= masteredTopics %></p>
-          <p class="text-xs text-indigo-100 mt-0.5">Mastered</p>
+        <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.22);border-radius:16px;padding:16px;text-align:center;">
+          <p style="font-size:28px;font-weight:800;color:#fff;margin:0;"><%= masteredTopics %></p>
+          <p style="font-size:11px;color:#6ee7b7;margin:4px 0 0 0;font-weight:600;">Mastered</p>
         </div>
-        <div class="glass-card rounded-xl p-4 text-white text-center">
-          <p class="text-2xl font-extrabold"><%= totalTopics %></p>
-          <p class="text-xs text-indigo-100 mt-0.5">Practised</p>
+        <div style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.22);border-radius:16px;padding:16px;text-align:center;">
+          <p style="font-size:28px;font-weight:800;color:#fff;margin:0;"><%= totalTopics %></p>
+          <p style="font-size:11px;color:#93c5fd;margin:4px 0 0 0;font-weight:600;">Practised</p>
         </div>
-        <div class="glass-card rounded-xl p-4 text-white text-center">
-          <p class="text-2xl font-extrabold"><%= overallAvg %>%</p>
-          <p class="text-xs text-indigo-100 mt-0.5">Avg Score</p>
+        <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.22);border-radius:16px;padding:16px;text-align:center;">
+          <p style="font-size:28px;font-weight:800;color:#fff;margin:0;"><%= overallAvg %>%</p>
+          <p style="font-size:11px;color:#fcd34d;margin:4px 0 0 0;font-weight:600;">Avg Score</p>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-6" style="margin-bottom:24px;">
 
-    <!-- Enrolled modules (wider) -->
+    <!-- Enrolled modules -->
     <div class="lg:col-span-3 card">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-base font-semibold text-gray-800">My Modules</h2>
-        <a href="/student/modules" class="text-xs text-primary-600 hover:underline font-medium">Browse all →</a>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+          <h2 style="font-size:16px;font-weight:700;color:#f8fafc;margin:0;">My Modules</h2>
+        </div>
+        <a href="/student/modules" style="font-size:13px;color:#a78bfa;text-decoration:none;font-weight:600;">Browse all →</a>
       </div>
       <% if (!modules.length) { %>
-        <div class="text-center py-12">
-          <p class="text-4xl mb-3">📭</p>
-          <p class="text-gray-400 text-sm">You haven't enrolled in any modules yet.</p>
-          <a href="/student/modules" class="btn-primary mt-4 text-sm">Browse Modules</a>
+        <div style="text-align:center;padding:48px 20px;">
+          <p style="font-size:40px;margin-bottom:12px;">📭</p>
+          <p style="color:#64748b;font-size:14px;">You haven't enrolled in any modules yet.</p>
+          <a href="/student/modules" class="btn-primary" style="margin-top:16px;display:inline-flex;">Browse Modules</a>
         </div>
       <% } else { %>
-      <div class="space-y-2">
+      <div style="display:flex;flex-direction:column;gap:8px;">
         <% modules.forEach(m => { %>
         <a href="/student/modules/<%= m.id %>"
-           class="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 hover:border-primary-200 hover:bg-primary-50 transition-all group">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-sm font-bold shadow-sm module-tile"
-                 data-colour="<%= m.colour %>">
+           style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);text-decoration:none;transition:background 0.15s;"
+           onmouseover="this.style.background='rgba(139,92,246,0.1)';this.style.borderColor='rgba(139,92,246,0.25)';"
+           onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,255,255,0.08)';">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div class="module-tile" data-colour="<%= m.colour %>" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:13px;font-weight:700;">
               <%= m.module_code ? m.module_code.slice(0,2) : m.module_name.charAt(0) %>
             </div>
-            <div class="min-w-0">
-              <p class="text-sm font-semibold text-gray-800 group-hover:text-primary-700 truncate"><%= m.module_name %></p>
-              <p class="text-xs text-gray-400"><%= m.pdf_count %> notes · <%= m.announcement_count %> announcements</p>
+            <div style="min-width:0;">
+              <p style="font-size:14px;font-weight:600;color:#f1f5f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= m.module_name %></p>
+              <p style="font-size:12px;color:#64748b;margin:3px 0 0 0;"><%= m.pdf_count %> notes · <%= m.announcement_count %> announcements</p>
             </div>
           </div>
-          <svg class="w-4 h-4 text-gray-300 group-hover:text-primary-500 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
+          <svg style="width:16px;height:16px;color:#475569;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </a>
         <% }) %>
       </div>
       <% } %>
     </div>
 
-    <!-- Recent scores (narrower) -->
-    <div class="lg:col-span-2 card flex flex-col">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-base font-semibold text-gray-800">Recent Scores</h2>
-        <a href="/student/progress" class="text-xs text-primary-600 hover:underline font-medium">All progress →</a>
+    <!-- Recent scores -->
+    <div class="lg:col-span-2 card" style="display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:4px;height:24px;background:linear-gradient(180deg,#6ee7b7,#10b981);border-radius:2px;"></div>
+          <h2 style="font-size:16px;font-weight:700;color:#f8fafc;margin:0;">Recent Scores</h2>
+        </div>
+        <a href="/student/improvement" style="font-size:13px;color:#6ee7b7;text-decoration:none;font-weight:600;">All progress →</a>
       </div>
       <% if (!recentScores.length) { %>
-        <div class="flex-1 flex flex-col items-center justify-center text-center py-8 text-gray-400">
-          <p class="text-3xl mb-2">🎯</p>
-          <p class="text-sm">No quizzes taken yet.<br/>Generate one from a lecture note!</p>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;color:#475569;">
+          <p style="font-size:32px;margin-bottom:8px;">🎯</p>
+          <p style="font-size:14px;">No quizzes taken yet.<br/>Generate one from a lecture note!</p>
         </div>
       <% } else { %>
-      <div class="space-y-3 flex-1">
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
         <% recentScores.forEach(s => { %>
         <%
           const pct = parseFloat(s.score_percentage) || 0;
-          const scoreColor = pct >= 85 ? '#16a34a' : pct >= 70 ? '#22c55e' : pct >= 50 ? '#ca8a04' : '#dc2626';
-          const scoreBg = pct >= 85 ? 'bg-green-100 text-green-700' : pct >= 70 ? 'bg-emerald-100 text-emerald-700' : pct >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+          const barColor = pct >= 85 ? '#10b981' : pct >= 70 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
         %>
-        <div class="p-3 rounded-xl border border-gray-100 space-y-2">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-gray-800 truncate"><%= s.topic_name %></p>
-              <p class="text-xs text-gray-400"><%= s.module_name %> · <%= new Date(s.attempted_at).toLocaleDateString() %></p>
+        <div style="padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(20,16,38,0.6);">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+            <div style="min-width:0;">
+              <p style="font-size:13px;font-weight:600;color:#f1f5f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= s.topic_name %></p>
+              <p style="font-size:11px;color:#64748b;margin:3px 0 0 0;"><%= s.module_name %> · <%= new Date(s.attempted_at).toLocaleDateString() %></p>
             </div>
-            <span class="badge <%= scoreBg %> flex-shrink-0"><%= pct.toFixed(0) %>%</span>
+            <span style="font-size:13px;font-weight:700;color:<%= barColor %>;flex-shrink:0;"><%= pct.toFixed(0) %>%</span>
           </div>
-          <div class="w-full bg-gray-100 rounded-full h-1.5">
-            <div class="h-1.5 rounded-full score-bar" data-pct="<%= pct %>" data-color="<%= scoreColor %>"></div>
+          <div style="width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;">
+            <div class="score-bar" data-pct="<%= pct %>" data-color="<%= barColor %>" style="height:100%;border-radius:2px;transition:width 0.6s ease;"></div>
           </div>
         </div>
         <% }) %>
@@ -145,23 +124,27 @@
 
   </div>
 
-  <!-- Quick actions row -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <a href="/student/modules" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-primary-300 hover:shadow-md transition-all text-center group border border-gray-100">
-      <span class="text-3xl group-hover:scale-110 transition-transform">📚</span>
-      <p class="text-sm font-medium text-gray-700">Browse Modules</p>
+  <!-- Quick actions -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
+    <a href="/student/modules" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;background:rgba(15,12,30,0.75);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;text-decoration:none;transition:border-color 0.15s;"
+       onmouseover="this.style.borderColor='rgba(139,92,246,0.4)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';">
+      <span style="font-size:30px;">📚</span>
+      <p style="font-size:14px;font-weight:600;color:#e2e8f0;margin:0;">Browse Modules</p>
     </a>
-    <a href="/student/progress" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-green-200 hover:shadow-md transition-all text-center group border border-gray-100">
-      <span class="text-3xl group-hover:scale-110 transition-transform">📈</span>
-      <p class="text-sm font-medium text-gray-700">My Progress</p>
+    <a href="/student/improvement" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;background:rgba(15,12,30,0.75);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;text-decoration:none;transition:border-color 0.15s;"
+       onmouseover="this.style.borderColor='rgba(16,185,129,0.4)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';">
+      <span style="font-size:30px;">📈</span>
+      <p style="font-size:14px;font-weight:600;color:#e2e8f0;margin:0;">My Improvement</p>
     </a>
-    <a href="/student/leaderboard" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-yellow-200 hover:shadow-md transition-all text-center group border border-gray-100">
-      <span class="text-3xl group-hover:scale-110 transition-transform">🏆</span>
-      <p class="text-sm font-medium text-gray-700">Leaderboard</p>
+    <a href="/student/leaderboard" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;background:rgba(15,12,30,0.75);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;text-decoration:none;transition:border-color 0.15s;"
+       onmouseover="this.style.borderColor='rgba(245,158,11,0.4)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';">
+      <span style="font-size:30px;">🏆</span>
+      <p style="font-size:14px;font-weight:600;color:#e2e8f0;margin:0;">Leaderboard</p>
     </a>
-    <a href="/student/tutors" class="card flex flex-col items-center justify-center gap-2 py-6 hover:border-purple-200 hover:shadow-md transition-all text-center group border border-gray-100">
-      <span class="text-3xl group-hover:scale-110 transition-transform">🎓</span>
-      <p class="text-sm font-medium text-gray-700">Find a Tutor</p>
+    <a href="/student/tutors" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;background:rgba(15,12,30,0.75);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;text-decoration:none;transition:border-color 0.15s;"
+       onmouseover="this.style.borderColor='rgba(168,85,247,0.4)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';">
+      <span style="font-size:30px;">🎓</span>
+      <p style="font-size:14px;font-weight:600;color:#e2e8f0;margin:0;">Find a Tutor</p>
     </a>
   </div>
 

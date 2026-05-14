@@ -2,20 +2,22 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <div class="flex items-center gap-3">
-    <a href="/admin/users" class="text-gray-400 hover:text-gray-600">← Users</a>
-    <span class="text-gray-300">/</span>
-    <h1 class="text-2xl font-bold text-gray-900">Module Assignments — <%= targetUser.name %></h1>
+<div style="max-width:1200px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
+    <a href="/admin/users" style="color:#a78bfa;font-size:13px;font-weight:600;text-decoration:none;">← Users</a>
+    <span style="color:#475569;">/</span>
+    <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0;letter-spacing:-0.5px;">Module Assignments — <%= targetUser.name %></h1>
     <span class="badge <%= targetUser.role === 'lecturer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' %>">
       <%= targetUser.role %>
     </span>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Assign new module -->
     <div class="card">
-      <h2 class="text-base font-semibold text-gray-800 mb-4">Assign a Module</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+        <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Assign a Module</h2>
+      </div>
       <form method="POST" action="/admin/users/<%= targetUser.id %>/modules" class="space-y-3">
         <input type="hidden" name="action" value="assign" />
         <select name="module_id" required class="form-input">
@@ -30,15 +32,19 @@
       </form>
     </div>
 
-    <!-- Assigned modules -->
     <div class="card">
-      <h2 class="text-base font-semibold text-gray-800 mb-4">Currently Assigned (<%= assigned.length %>)</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:4px;height:24px;background:linear-gradient(180deg,#93c5fd,#2563eb);border-radius:2px;"></div>
+        <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Currently Assigned (<%= assigned.length %>)</h2>
+      </div>
       <% if (assigned.length === 0) { %>
-        <p class="text-gray-400 text-sm text-center py-6">No modules assigned yet.</p>
+        <div style="text-align:center;padding:40px 20px;">
+          <p style="color:#94a3b8;font-size:14px;font-weight:600;">No modules assigned yet.</p>
+        </div>
       <% } else { %>
       <ul class="space-y-2">
         <% assigned.forEach(m => { %>
-        <li class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <li style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(20,16,38,0.6);">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full" style="background-color: <%= m.colour %>"></div>
             <span class="text-sm font-medium text-gray-700"><%= m.module_code %></span>

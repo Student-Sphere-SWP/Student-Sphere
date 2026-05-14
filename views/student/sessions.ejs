@@ -2,17 +2,20 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <h1 class="text-2xl font-bold text-gray-900">Tutorial Sessions</h1>
+<div style="max-width:1200px;margin:0 auto;">
+  <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0 0 6px 0;letter-spacing:-0.5px;">Tutorial Sessions</h1>
 
-  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+  <div style="display:grid;grid-template-columns:1fr;gap:24px;margin-top:24px;" class="xl-grid-3col">
     <!-- Upcoming sessions -->
-    <div class="xl:col-span-2 space-y-4">
-      <h2 class="text-base font-semibold text-gray-700">Upcoming Sessions</h2>
+    <div style="grid-column:span 2;" class="space-y-4">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+        <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Upcoming Sessions</h2>
+      </div>
       <% if (!upcomingSessions.length) { %>
-        <div class="card text-center py-10 text-gray-400">
-          <p class="text-3xl mb-2">📅</p>
-          <p>No upcoming sessions available.</p>
+        <div style="text-align:center;padding:60px 20px;">
+          <span style="font-size:48px;display:block;margin-bottom:16px;">📅</span>
+          <p style="color:#94a3b8;font-size:16px;font-weight:600;">No upcoming sessions available.</p>
         </div>
       <% } else { %>
         <% upcomingSessions.forEach(s => { %>
@@ -20,7 +23,7 @@
           const rsvpd = s.i_rsvpd;
           const full = Number(s.rsvp_count) >= Number(s.capacity);
         %>
-        <div class="card space-y-2">
+        <div class="card" style="margin-bottom:12px;">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p class="text-sm font-semibold text-gray-800"><%= s.topic %></p>
@@ -61,7 +64,10 @@
 
     <!-- My RSVPs -->
     <div class="space-y-4">
-      <h2 class="text-base font-semibold text-gray-700">My RSVPs</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+        <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">My RSVPs</h2>
+      </div>
       <% if (!myRsvps.length) { %>
         <div class="card text-center py-8 text-gray-400 text-sm">You have no upcoming RSVPs.</div>
       <% } else { %>

@@ -2,9 +2,9 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <h1 class="text-2xl font-bold text-gray-900">Manage Modules</h1>
+<div style="max-width:1200px;margin:0 auto;">
+  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;">
+    <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0;letter-spacing:-0.5px;">Manage Modules</h1>
     <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="btn-primary">
       + New Module
     </button>
@@ -13,17 +13,17 @@
   <div class="card p-0 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-100">
+        <thead style="background:rgba(20,16,38,0.8);border-bottom:1px solid rgba(255,255,255,0.08);">
           <tr>
-            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Module</th>
-            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Description</th>
-            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Students</th>
-            <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+            <th class="text-left px-6 py-3 text-xs font-semibold uppercase" style="color:#64748b;">Module</th>
+            <th class="text-left px-6 py-3 text-xs font-semibold uppercase hidden md:table-cell" style="color:#64748b;">Description</th>
+            <th class="text-left px-6 py-3 text-xs font-semibold uppercase" style="color:#64748b;">Students</th>
+            <th class="text-right px-6 py-3 text-xs font-semibold uppercase" style="color:#64748b;">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50">
+        <tbody>
           <% modules.forEach(m => { %>
-          <tr class="hover:bg-gray-50">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
             <td class="px-6 py-3">
               <div class="flex items-center gap-3">
                 <div class="w-3 h-8 rounded-full" style="background-color: <%= m.colour %>"></div>
@@ -38,7 +38,7 @@
             </td>
             <td class="px-6 py-3 text-gray-600"><%= m.student_count %></td>
             <td class="px-6 py-3 text-right">
-                    <button onclick='openEditModal(<%- JSON.stringify(m.id) %>, <%- JSON.stringify(m.module_name) %>, <%- JSON.stringify(m.colour) %>, <%- JSON.stringify(m.description || "") %>)'
+              <button onclick='openEditModal(<%- JSON.stringify(m.id) %>, <%- JSON.stringify(m.module_name) %>, <%- JSON.stringify(m.colour) %>, <%- JSON.stringify(m.description || "") %>)'
                       class="text-xs text-blue-600 hover:underline mr-3">Edit</button>
               <form method="POST" action="/admin/modules/<%= m.id %>?_method=DELETE" class="inline"
                     onsubmit="return confirm('Delete <%= m.module_code %>?')">
@@ -48,7 +48,7 @@
           </tr>
           <% }) %>
           <% if (!modules.length) { %>
-          <tr><td colspan="4" class="px-6 py-10 text-center text-gray-400">No modules yet.</td></tr>
+          <tr><td colspan="4" class="px-6 py-10 text-center" style="color:#64748b;">No modules yet.</td></tr>
           <% } %>
         </tbody>
       </table>
@@ -59,8 +59,8 @@
 <!-- Create Modal -->
 <div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-black bg-opacity-40" onclick="document.getElementById('create-modal').classList.add('hidden')"></div>
-  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-    <h2 class="text-lg font-semibold text-gray-800">New Module</h2>
+  <div style="position:relative;background:rgba(15,12,30,0.95);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:32px;width:100%;max-width:440px;">
+    <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0 0 20px 0;">New Module</h2>
     <form method="POST" action="/admin/modules" class="space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -91,8 +91,8 @@
 <!-- Edit Modal -->
 <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-black bg-opacity-40" onclick="document.getElementById('edit-modal').classList.add('hidden')"></div>
-  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-    <h2 class="text-lg font-semibold text-gray-800">Edit Module</h2>
+  <div style="position:relative;background:rgba(15,12,30,0.95);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:32px;width:100%;max-width:440px;">
+    <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0 0 20px 0;">Edit Module</h2>
     <form id="edit-form" method="POST" class="space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <div>

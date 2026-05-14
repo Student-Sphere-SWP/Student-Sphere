@@ -375,38 +375,169 @@ router.post('/create-quiz', lecturerOnly, async (req, res) => {
   }
 });
 
-// ── Analytics ─────────────────────────────────────────────────────────────────
+// ── Overall Analytics ─────────────────────────────────────────────────────────
+router.get('/analytics', lecturerOnly, async (req, res) => {
+  try {
+    const lid = req.user.id;
+
+    const [modulesRes, overallRes, moduleStatsRes, recentRes] = await Promise.all([
+      // All modules this lecturer teaches
+      pool.query(
+        `SELECT m.id, m.module_name, m.module_code, m.colour
+         FROM user_module um JOIN module m ON m.id = um.module_id
+         WHERE um.user_id = $1 AND m.deleted_at IS NULL ORDER BY m.module_name`,
+        [lid]
+      ),
+      // Across all their modules: total students, total quiz attempts, avg score
+      pool.query(
+        `SELECT
+           (SELECT COUNT(DISTINCT se.student_id)
+            FROM student_enrollment se
+            JOIN user_module um ON um.module_id = se.module_id
+            WHERE um.user_id = $1)                              AS total_students,
+           (SELECT COUNT(*)
+            FROM ai_quiz_attempt a
+            JOIN user_module um ON um.module_id = a.module_id
+            WHERE um.user_id = $1)                             AS total_attempts,
+           (SELECT ROUND(AVG(a.score_percentage), 1)
+            FROM ai_quiz_attempt a
+            JOIN user_module um ON um.module_id = a.module_id
+            WHERE um.user_id = $1)                             AS avg_score`,
+        [lid]
+      ),
+      // Per-module breakdown
+      pool.query(
+        `SELECT m.id, m.module_name, m.module_code, m.colour,
+           COUNT(DISTINCT se.student_id)                               AS student_count,
+           COUNT(a.id)                                                  AS attempt_count,
+           ROUND(AVG(a.score_percentage), 1)                           AS avg_score
+         FROM user_module um
+         JOIN module m ON m.id = um.module_id
+         LEFT JOIN student_enrollment se ON se.module_id = m.id
+         LEFT JOIN ai_quiz_attempt a ON a.module_id = m.id
+         WHERE um.user_id = $1 AND m.deleted_at IS NULL
+         GROUP BY m.id, m.module_name, m.module_code, m.colour
+         ORDER BY m.module_name`,
+        [lid]
+      ),
+      // Recent quiz attempts across all modules
+      pool.query(
+        `SELECT a.attempted_at, a.score_percentage, a.topic_name, m.module_name, u.name AS student_name
+         FROM ai_quiz_attempt a
+         JOIN user_module um ON um.module_id = a.module_id
+         JOIN module m ON m.id = a.module_id
+         JOIN "user" u ON u.id = a.student_id
+         WHERE um.user_id = $1
+         ORDER BY a.attempted_at DESC LIMIT 15`,
+        [lid]
+      )
+    ]);
+
+    const o = overallRes.rows[0];
+    res.render('lecturer/analytics-overview', {
+      title:       'Analytics',
+      user:        req.user,
+      overall: {
+        totalStudents: o.total_students,
+        totalAttempts: o.total_attempts,
+        avgScore:      o.avg_score
+      },
+      moduleStats:  moduleStatsRes.rows,
+      recentScores: recentRes.rows,
+      moduleCount:  modulesRes.rows.length
+    });
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to load analytics.';
+    res.redirect('/lecturer/dashboard');
+  }
+});
+
+// ── Per-module Analytics ───────────────────────────────────────────────────────
 router.get('/analytics/:moduleId', lecturerOnly, async (req, res) => {
   try {
     const ok = await assertLecturerModule(req.user.id, req.params.moduleId, res, '/lecturer/dashboard');
     if (!ok) { req.session.error = 'Access denied.'; return res.redirect('/lecturer/dashboard'); }
 
-    const [moduleRes, topicStats, recentScores] = await Promise.all([
-      pool.query('SELECT * FROM module WHERE id = $1', [req.params.moduleId]),
+    const mid = req.params.moduleId;
+
+    const [moduleRes, summaryRes, topicStats, scoreBands, topStudents, recentScores] = await Promise.all([
+      pool.query('SELECT * FROM module WHERE id = $1', [mid]),
+
+      // Overall module stats
+      pool.query(
+        `SELECT
+           (SELECT COUNT(*) FROM student_enrollment WHERE module_id = $1)          AS total_students,
+           COUNT(*)                                                                  AS total_attempts,
+           COUNT(DISTINCT a.student_id)                                             AS active_students,
+           ROUND(AVG(a.score_percentage), 1)                                        AS avg_score,
+           ROUND(MAX(a.score_percentage), 1)                                        AS top_score,
+           COUNT(*) FILTER (WHERE a.score_percentage >= 70)                        AS pass_count
+         FROM ai_quiz_attempt a WHERE a.module_id = $1`,
+        [mid]
+      ),
+
+      // Topic breakdown (sorted worst first)
       pool.query(
         `SELECT topic_name,
            ROUND(AVG(score_percentage), 1) AS avg_score,
-           COUNT(*) AS attempt_count,
-           ROUND(MIN(score_percentage), 1) AS min_score,
-           ROUND(MAX(score_percentage), 1) AS max_score
-         FROM ai_quiz_attempt
-         WHERE module_id = $1
+           COUNT(*)                         AS attempt_count,
+           ROUND(MIN(score_percentage), 1)  AS min_score,
+           ROUND(MAX(score_percentage), 1)  AS max_score
+         FROM ai_quiz_attempt WHERE module_id = $1
          GROUP BY topic_name ORDER BY avg_score ASC`,
-        [req.params.moduleId]
+        [mid]
       ),
+
+      // Score distribution bands
+      pool.query(
+        `SELECT
+           COUNT(*) FILTER (WHERE score_percentage >= 85)                          AS mastered,
+           COUNT(*) FILTER (WHERE score_percentage >= 70 AND score_percentage < 85) AS proficient,
+           COUNT(*) FILTER (WHERE score_percentage >= 50 AND score_percentage < 70) AS getting_there,
+           COUNT(*) FILTER (WHERE score_percentage < 50)                            AS needs_work
+         FROM ai_quiz_attempt WHERE module_id = $1`,
+        [mid]
+      ),
+
+      // Top 5 students by avg score (min 2 attempts)
+      pool.query(
+        `SELECT u.name, COUNT(*) AS attempts,
+           ROUND(AVG(a.score_percentage), 1) AS avg_score
+         FROM ai_quiz_attempt a JOIN "user" u ON u.id = a.student_id
+         WHERE a.module_id = $1
+         GROUP BY u.id, u.name HAVING COUNT(*) >= 2
+         ORDER BY avg_score DESC LIMIT 5`,
+        [mid]
+      ),
+
+      // Recent 20 quiz attempts
       pool.query(
         `SELECT a.attempted_at, a.score_percentage, a.topic_name, u.name AS student_name
          FROM ai_quiz_attempt a JOIN "user" u ON u.id = a.student_id
-         WHERE a.module_id = $1 ORDER BY a.attempted_at DESC LIMIT 50`,
-        [req.params.moduleId]
+         WHERE a.module_id = $1 ORDER BY a.attempted_at DESC LIMIT 20`,
+        [mid]
       )
     ]);
 
+    const s = summaryRes.rows[0];
     res.render('lecturer/analytics', {
-      title: 'Module Analytics',
-      user: req.user,
-      module:       moduleRes.rows[0],
+      title:       'Module Analytics',
+      user:        req.user,
+      module:      moduleRes.rows[0],
+      summary: {
+        totalStudents:  s.total_students,
+        totalAttempts:  s.total_attempts,
+        activeStudents: s.active_students,
+        avgScore:       s.avg_score,
+        topScore:       s.top_score,
+        passCount:      s.pass_count,
+        passRate:       s.total_attempts > 0
+          ? Math.round((s.pass_count / s.total_attempts) * 100) : null
+      },
       topicStats:   topicStats.rows,
+      scoreBands:   scoreBands.rows[0],
+      topStudents:  topStudents.rows,
       recentScores: recentScores.rows
     });
   } catch (err) {

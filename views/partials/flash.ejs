@@ -1,20 +1,20 @@
 <% if (typeof success !== 'undefined' && success) { %>
-<div class="mb-4 flex items-start gap-3 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">
-  <span class="text-green-500 mt-0.5">✓</span>
+<div style="margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:12px 16px;font-size:14px;color:#6ee7b7;">
+  <span style="margin-top:2px;">✓</span>
   <span><%= success %></span>
 </div>
 <% } %>
 
 <% if (typeof error !== 'undefined' && error) { %>
-<div class="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
-  <span class="text-red-500 mt-0.5">✕</span>
+<div style="margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:12px 16px;font-size:14px;color:#fca5a5;">
+  <span style="margin-top:2px;">✕</span>
   <span><%= error %></span>
 </div>
 <% } %>
 
 <% if (typeof info !== 'undefined' && info) { %>
-<div class="mb-4 flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-4 py-3 text-sm">
-  <span class="text-blue-500 mt-0.5">ℹ</span>
+<div style="margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:12px 16px;font-size:14px;color:#a5b4fc;">
+  <span style="margin-top:2px;">ℹ</span>
   <span><%= info %></span>
 </div>
 <% } %>

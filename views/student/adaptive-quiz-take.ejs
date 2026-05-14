@@ -2,16 +2,15 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="max-w-3xl mx-auto space-y-6">
+<div style="max-width:900px;margin:0 auto;">
 
-  <!-- Header -->
   <div>
-    <a href="/student/adaptive-quiz" class="text-gray-400 hover:text-gray-600 text-sm">← Back to Topic Selection</a>
+    <a href="/student/adaptive-quiz" style="color:#a78bfa;font-size:13px;font-weight:600;text-decoration:none;">← Back to Topic Selection</a>
     <div class="flex items-start justify-between mt-2 gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">🧠 Adaptive Quiz</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          Topic: <strong class="text-gray-800"><%= topicName %></strong> ·
+        <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0 0 6px 0;letter-spacing:-0.5px;">🧠 Adaptive Quiz</h1>
+        <p style="color:#64748b;font-size:14px;margin:0;">
+          Topic: <strong style="color:#94a3b8;"><%= topicName %></strong> ·
           <%= moduleName %> ·
           <%= questions.length %> questions
         </p>
@@ -22,7 +21,6 @@
       </div>
     </div>
 
-    <!-- Adaptive level banner -->
     <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
       <%= avgScore < 50 ? 'bg-red-50 text-red-700 border border-red-200' : avgScore < 70 ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' %>">
       <% if (avgScore < 50) { %>
@@ -35,7 +33,7 @@
     </div>
   </div>
 
-  <form method="POST" action="/student/adaptive-quiz/submit" id="quizForm">
+  <form method="POST" action="/student/adaptive-quiz/submit" id="quizForm" style="margin-top:24px;">
     <input type="hidden" name="weak_topic_id"   value="<%= weakTopicId %>" />
     <input type="hidden" name="module_id"        value="<%= moduleId %>" />
     <input type="hidden" name="topic_name"       value="<%= topicName %>" />
@@ -65,12 +63,12 @@
     </div>
 
     <!-- Progress bar -->
-    <div class="sticky bottom-4 bg-white border border-gray-200 rounded-xl shadow-lg px-5 py-4 flex items-center justify-between gap-4 mt-6">
+    <div class="sticky bottom-4" style="background:rgba(15,12,30,0.95);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px;backdrop-filter:blur(16px);">
       <div class="flex-1">
         <div class="flex justify-between text-xs text-gray-500 mb-1">
           <span id="answeredCount">0</span> / <%= questions.length %> answered
         </div>
-        <div class="bg-gray-100 rounded-full h-2">
+        <div class="rounded-full h-2" style="background:rgba(255,255,255,0.1);">
           <div id="progressBar" class="bg-emerald-500 h-2 rounded-full transition-all" style="width:0%"></div>
         </div>
       </div>
@@ -106,7 +104,6 @@
     });
   });
 
-  // Allow partial submit with confirmation
   document.getElementById('quizForm').addEventListener('submit', e => {
     const answered = answers.filter(a => a !== null).length;
     if (answered < total) {

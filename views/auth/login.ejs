@@ -1,52 +1,48 @@
 <%- include('../partials/head', { title: 'Login' }) %>
 
-<div class="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat" 
-     style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/login_bg.jpg'); background-color: #1a202c;">
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background-image:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url('/images/login_bg.jpg');background-size:cover;background-position:center;background-color:#1a202c;">
   
-  <div class="w-full max-w-md relative z-10">
-    <div class="text-center mb-8">
-      <!-- Bigger circular logo -->
-      <div class="mb-4">
+  <div style="width:100%;max-width:440px;position:relative;z-index:10;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="margin-bottom:16px;">
         <img src="/images/logo.jpg" alt="Student Sphere Logo" 
-             class="mx-auto w-28 h-28 rounded-full object-cover shadow-lg border-4 border-white" />
+             style="margin:0 auto;width:112px;height:112px;border-radius:50%;object-fit:cover;box-shadow:0 8px 32px rgba(0,0,0,0.4);border:4px solid rgba(255,255,255,0.15);" />
       </div>
-      <h1 class="text-2xl font-bold text-white">Student Sphere</h1>
-      <p class="text-gray-200 text-sm mt-1">WHERE STUDENTS AND SUCCESS COLLIDE</p>
+      <h1 style="font-size:24px;font-weight:800;color:#fff;margin:0;">Student Sphere</h1>
+      <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:4px 0 0 0;letter-spacing:1px;">WHERE STUDENTS AND SUCCESS COLLIDE</p>
     </div>
 
-    <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20">
-      <h2 class="text-xl font-semibold text-gray-800 mb-6">Sign in to your account</h2>
+    <div style="background:rgba(15,12,30,0.95);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:32px;">
+      <h2 style="font-size:20px;font-weight:700;color:#f8fafc;margin:0 0 24px 0;">Sign in to your account</h2>
 
       <%- include('../partials/flash') %>
 
       <form method="POST" action="/login" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1" for="email">Email address</label>
+          <label class="form-label" for="email">Email address</label>
           <input type="email" id="email" name="email" required autocomplete="email"
-                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition" 
-                 placeholder="you@example.com" />
+                 class="form-input" placeholder="you@example.com" />
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1" for="password">
-            Password
-            <a href="/forgot-password" class="float-right text-xs text-primary-600 hover:underline font-normal">
+          <label class="form-label" for="password" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Password</span>
+            <a href="/forgot-password" style="color:#a78bfa;font-size:12px;font-weight:600;text-decoration:none;">
               Forgot password?
             </a>
           </label>
           <input type="password" id="password" name="password" required autocomplete="current-password"
-                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition" 
-                 placeholder="••••••••" />
+                 class="form-input" placeholder="••••••••" />
         </div>
 
-        <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 rounded-lg shadow-md transition duration-200">
+        <button type="submit" class="btn-primary w-full justify-center py-2.5">
           Sign in
         </button>
       </form>
 
-      <p class="mt-6 text-center text-sm text-gray-500">
+      <p style="margin-top:24px;text-align:center;font-size:14px;color:#64748b;">
         New student?
-        <a href="/register" class="text-primary-600 font-medium hover:underline">Create an account</a>
+        <a href="/register" style="color:#a78bfa;font-weight:600;text-decoration:none;">Create an account</a>
       </p>
     </div>
   </div>

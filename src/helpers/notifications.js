@@ -15,7 +15,7 @@ async function createNotification(userId, type, title, body = null, link = null,
       await pool.query(
         `INSERT INTO in_app_notification (user_id, type, title, body, link, dedup_key)
          VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (user_id, dedup_key) DO NOTHING`,
+         ON CONFLICT (user_id, dedup_key) WHERE dedup_key IS NOT NULL DO NOTHING`,
         [userId, type, title, body, link, dedupKey]
       );
     } else {

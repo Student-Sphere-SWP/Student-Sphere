@@ -46,21 +46,23 @@ const roleBadgeColor = {
 };
 %>
 
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-screen overflow-hidden" style="background: linear-gradient(160deg, rgba(10,8,25,0.97) 0%, rgba(18,12,32,0.97) 30%, rgba(10,20,32,0.97) 70%, rgba(8,10,20,0.97) 100%), url('/images/login_bg.jpg'); background-size: cover; background-position: center; background-attachment: fixed;">
   <!-- Sidebar -->
-  <aside class="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 flex-shrink-0">
+  <aside class="hidden lg:flex flex-col w-64 flex-shrink-0" style="background: rgba(12,10,24,0.92); border-right: 1px solid rgba(255,255,255,0.08);">
     <!-- Logo -->
-    <div class="flex items-center gap-3 px-6 h-16 border-b border-gray-100">
-      <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">S²</div>
-      <span class="font-bold text-gray-800 text-lg">Student Sphere</span>
+    <div style="display:flex; align-items:center; gap:12px; padding:0 24px; height:64px; border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;box-shadow:0 4px 14px rgba(124,58,237,0.4);">S²</div>
+      <span style="font-weight:800;color:#f8fafc;font-size:17px;letter-spacing:-0.3px;">Student Sphere</span>
     </div>
 
     <!-- Nav links -->
-    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+    <nav style="flex:1;overflow-y:auto;padding:16px 12px;" class="space-y-0.5">
       <% roleLinks.forEach(link => { %>
         <a href="<%= link.href %>"
-           class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-colors">
-          <span class="text-base"><%= link.icon %></span>
+           style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;color:#cbd5e1;text-decoration:none;transition:all 0.15s;"
+           onmouseover="this.style.background='rgba(139,92,246,0.15)';this.style.color='#ddd6fe';"
+           onmouseout="this.style.background='transparent';this.style.color='#cbd5e1';">
+          <span style="font-size:16px;"><%= link.icon %></span>
           <span><%= link.label %></span>
         </a>
       <% }) %>
@@ -68,24 +70,30 @@ const roleBadgeColor = {
 
     <!-- User section -->
     <% if (user) { %>
-    <div class="border-t border-gray-100 p-4">
-      <div class="flex items-center gap-3 mb-3">
+    <div style="border-top:1px solid rgba(255,255,255,0.08);padding:16px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
         <% if (user.profile_picture) { %>
-          <img src="<%= user.profile_picture %>" alt="<%= user.name %>" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary-100" />
+          <img src="<%= user.profile_picture %>" alt="<%= user.name %>" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.4);" />
         <% } else { %>
-          <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(139,92,246,0.25);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#c4b5fd;border:2px solid rgba(139,92,246,0.3);">
             <%= user.name.charAt(0).toUpperCase() %>
           </div>
         <% } %>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-800 truncate"><%= user.name %></p>
-          <span class="badge <%= roleBadgeColor[user.role] || 'bg-gray-100 text-gray-700' %>">
+        <div style="flex:1;min-width:0;">
+          <p style="font-size:13px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;"><%= user.name %></p>
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:0.3px;
+            <%= user.role === 'admin' ? 'background:rgba(239,68,68,0.2);color:#fca5a5;' :
+               user.role === 'lecturer' ? 'background:rgba(59,130,246,0.2);color:#93c5fd;' :
+               user.role === 'student' ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;' :
+               'background:rgba(139,92,246,0.2);color:#ddd6fe;' %>">
             <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>
           </span>
         </div>
       </div>
-      <a href="/logout" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+      <a href="/logout" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;font-size:13px;font-weight:600;color:#94a3b8;text-decoration:none;border-radius:10px;transition:all 0.15s;"
+         onmouseover="this.style.background='rgba(239,68,68,0.12)';this.style.color='#fca5a5';"
+         onmouseout="this.style.background='transparent';this.style.color='#94a3b8';">
+        <svg style="width:14px;height:14px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
         Sign out
       </a>
     </div>
@@ -95,13 +103,13 @@ const roleBadgeColor = {
   <!-- Main content area -->
   <div class="flex-1 flex flex-col overflow-hidden">
     <!-- Mobile top bar -->
-    <header class="lg:hidden flex items-center justify-between px-4 h-14 bg-white border-b border-gray-100">
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">S²</div>
-        <span class="font-bold text-gray-800">Student Sphere</span>
+    <header class="lg:hidden flex items-center justify-between px-4 h-14" style="background:rgba(12,10,24,0.95);border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;">S²</div>
+        <span style="font-weight:800;color:#f8fafc;font-size:15px;">Student Sphere</span>
       </div>
-      <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-gray-100">
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button id="mobile-menu-btn" style="padding:8px;border-radius:8px;background:transparent;border:none;cursor:pointer;">
+        <svg style="width:20px;height:20px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
@@ -109,22 +117,22 @@ const roleBadgeColor = {
 
     <!-- Mobile menu overlay -->
     <div id="mobile-menu" class="lg:hidden hidden fixed inset-0 z-50">
-      <div class="absolute inset-0 bg-black bg-opacity-40" id="mobile-menu-overlay"></div>
-      <div class="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl flex flex-col">
-        <div class="flex items-center justify-between px-5 h-14 border-b border-gray-100">
-          <span class="font-bold text-gray-800">Menu</span>
-          <button id="mobile-menu-close" class="p-1 rounded hover:bg-gray-100">✕</button>
+      <div class="absolute inset-0 bg-black bg-opacity-60" id="mobile-menu-overlay"></div>
+      <div class="absolute left-0 top-0 bottom-0 w-64 flex flex-col" style="background:rgba(12,10,24,0.97);border-right:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <span style="font-weight:800;color:#f8fafc;font-size:15px;">Menu</span>
+          <button id="mobile-menu-close" style="background:transparent;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:4px;">✕</button>
         </div>
-        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+        <nav style="flex:1;overflow-y:auto;padding:12px;" class="space-y-0.5">
           <% roleLinks.forEach(link => { %>
-            <a href="<%= link.href %>" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary-700">
+            <a href="<%= link.href %>" style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;color:#cbd5e1;text-decoration:none;">
               <span><%= link.icon %></span><span><%= link.label %></span>
             </a>
           <% }) %>
         </nav>
         <% if (user) { %>
-        <div class="border-t p-4">
-          <a href="/logout" class="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg">
+        <div style="border-top:1px solid rgba(255,255,255,0.08);padding:16px;">
+          <a href="/logout" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#f87171;text-decoration:none;padding:8px 12px;border-radius:8px;">
             Sign out
           </a>
         </div>
@@ -133,4 +141,4 @@ const roleBadgeColor = {
     </div>
 
     <!-- Page content -->
-    <main class="flex-1 overflow-y-auto p-6">
+    <main class="flex-1 overflow-y-auto p-6" style="font-family:'Inter','SF Pro Display',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:#f1f5f9;">

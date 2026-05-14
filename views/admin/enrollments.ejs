@@ -2,13 +2,15 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <h1 class="text-2xl font-bold text-gray-900">Manage Enrollments</h1>
+<div style="max-width:1200px;margin:0 auto;">
+  <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0 0 24px 0;letter-spacing:-0.5px;">Manage Enrollments</h1>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Enroll student form -->
     <div class="card">
-      <h2 class="text-base font-semibold text-gray-800 mb-4">Enroll Student in Module</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+        <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Enroll Student in Module</h2>
+      </div>
       <form method="POST" action="/admin/enrollments" class="space-y-4">
         <div>
           <label class="form-label">Student</label>
@@ -32,12 +34,14 @@
       </form>
     </div>
 
-    <!-- Recent enrollments -->
     <div class="card">
-      <h2 class="text-base font-semibold text-gray-800 mb-4">Recent Enrollments</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:4px;height:24px;background:linear-gradient(180deg,#93c5fd,#2563eb);border-radius:2px;"></div>
+        <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Recent Enrollments</h2>
+      </div>
       <div class="space-y-2 max-h-96 overflow-y-auto">
         <% enrollments.forEach(e => { %>
-        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div style="padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(20,16,38,0.6);display:flex;align-items:center;justify-content:space-between;">
           <div>
             <p class="text-sm font-medium text-gray-700"><%= e.student_name %></p>
             <p class="text-xs text-gray-400"><%= e.module_code %> — <%= e.module_name %></p>

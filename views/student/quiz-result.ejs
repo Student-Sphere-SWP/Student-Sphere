@@ -1,8 +1,7 @@
 <%- include('../partials/head', { title }) %>
 <%- include('../partials/navbar', { user }) %>
 
-<div class="max-w-3xl mx-auto space-y-6">
-  <!-- Score card -->
+<div style="max-width:900px;margin:0 auto;">
   <%
     const pct = Math.round(score * 100 / total);
     let level = 'Need Practice';
@@ -19,7 +18,7 @@
           'bg-red-100 text-red-700' %>">
       <%= pct %>%
     </div>
-    <h1 class="text-2xl font-bold text-gray-900 mt-4">Quiz Complete!</h1>
+    <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:16px 0 0 0;letter-spacing:-0.5px;">Quiz Complete!</h1>
     <p class="text-gray-500 mt-1">Topic: <strong><%= topicName %></strong></p>
     <p class="text-gray-600 mt-1">You scored <strong><%= score %></strong> out of <strong><%= total %></strong></p>
     <span class="inline-block mt-3 px-4 py-1.5 rounded-full text-sm font-semibold
@@ -31,9 +30,11 @@
     </span>
   </div>
 
-  <!-- Breakdown -->
-  <div class="card">
-    <h2 class="text-base font-semibold text-gray-800 mb-4">Answer Breakdown</h2>
+  <div class="card" style="margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+      <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Answer Breakdown</h2>
+    </div>
     <div class="space-y-4">
       <% results.forEach((r, idx) => { %>
       <div class="p-3 rounded-lg border <%= r.correct ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50' %>">
@@ -55,7 +56,7 @@
     </div>
   </div>
 
-  <div class="flex gap-3">
+  <div class="flex gap-3" style="margin-top:24px;">
     <a href="/student/modules/<%= moduleId %>" class="btn-secondary">Back to Module</a>
     <a href="/student/progress" class="btn-primary">View My Progress</a>
   </div>

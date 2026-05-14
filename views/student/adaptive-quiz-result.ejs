@@ -1,7 +1,7 @@
 <%- include('../partials/head', { title }) %>
 <%- include('../partials/navbar', { user }) %>
 
-<div class="max-w-3xl mx-auto space-y-6">
+<div style="max-width:900px;margin:0 auto;">
   <%
     const pct = Math.round(scorePct);
     let level = 'Needs Work';
@@ -11,7 +11,6 @@
     else if (pct >= 50) { level = 'Getting There'; levelColor = 'yellow';  }
   %>
 
-  <!-- Score card -->
   <div class="card text-center py-10">
     <div class="w-24 h-24 rounded-full mx-auto flex items-center justify-center text-3xl font-extrabold
       <%= levelColor === 'green'   ? 'bg-green-100   text-green-700'   :
@@ -20,7 +19,7 @@
                                      'bg-red-100     text-red-700' %>">
       <%= pct %>%
     </div>
-    <h1 class="text-2xl font-bold text-gray-900 mt-4">Adaptive Quiz Complete!</h1>
+    <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:16px 0 0 0;letter-spacing:-0.5px;">Adaptive Quiz Complete!</h1>
     <p class="text-gray-500 mt-1">Topic: <strong class="text-gray-700"><%= topicName %></strong></p>
     <p class="text-gray-600 mt-1">You got <strong><%= score %></strong> out of <strong><%= total %></strong> correct</p>
 
@@ -43,9 +42,11 @@
     <% } %>
   </div>
 
-  <!-- Answer breakdown -->
-  <div class="card">
-    <h2 class="text-base font-semibold text-gray-800 mb-4">Answer Breakdown</h2>
+  <div class="card" style="margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+      <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Answer Breakdown</h2>
+    </div>
     <div class="space-y-4">
       <% results.forEach((r, idx) => { %>
       <div class="p-3.5 rounded-xl border <%= r.correct ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50' %>">
@@ -67,8 +68,7 @@
     </div>
   </div>
 
-  <!-- Actions -->
-  <div class="flex flex-wrap gap-3">
+  <div class="flex flex-wrap gap-3" style="margin-top:24px;">
     <a href="/student/adaptive-quiz" class="btn-secondary">← Try Another Topic</a>
     <% if (!improved) { %>
     <form method="POST" action="/student/adaptive-quiz/generate" class="inline">

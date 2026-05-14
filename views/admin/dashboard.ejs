@@ -2,14 +2,12 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <!-- Header -->
-  <div>
-    <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-    <p class="text-gray-500 text-sm mt-1">System overview</p>
+<div style="max-width:1200px;margin:0 auto;">
+  <div style="margin-bottom:24px;">
+    <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0 0 6px 0;letter-spacing:-0.5px;">Admin Dashboard</h1>
+    <p style="color:#64748b;font-size:14px;margin:0;">System overview</p>
   </div>
 
-  <!-- Stat cards -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div class="card flex items-center gap-4">
       <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">👨‍🏫</div>
@@ -41,7 +39,7 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" style="margin-top:16px;">
     <div class="card flex items-center gap-4">
       <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-2xl">📋</div>
       <div>
@@ -65,9 +63,11 @@
     </div>
   </div>
 
-  <!-- Quick links -->
-  <div class="card">
-    <h2 class="text-base font-semibold text-gray-800 mb-4">Quick Actions</h2>
+  <div class="card" style="margin-top:16px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+      <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Quick Actions</h2>
+    </div>
     <div class="flex flex-wrap gap-3">
       <a href="/admin/users" class="btn-primary">Manage Users</a>
       <a href="/admin/modules" class="btn-secondary">Manage Modules</a>

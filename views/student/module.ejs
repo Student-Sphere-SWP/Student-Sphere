@@ -2,7 +2,7 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
+<div class="space-y-6" style="max-width:1200px;margin:0 auto;">
   <!-- Header -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
@@ -159,10 +159,10 @@
 
 <!-- AI Quiz Generation Modal -->
 <div id="quiz-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black bg-opacity-40" onclick="closeQuizModal()"></div>
-  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-    <h2 class="text-lg font-semibold text-gray-800 mb-1">Generate AI Quiz</h2>
-    <p class="text-sm text-gray-500 mb-4">Topic: <strong id="modal-topic"></strong></p>
+  <div class="absolute inset-0 bg-black bg-opacity-60" onclick="closeQuizModal()"></div>
+  <div class="relative w-full max-w-sm" style="background:rgba(15,12,30,0.97);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:32px;">
+    <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0 0 6px 0;">Generate AI Quiz</h2>
+    <p style="font-size:13px;color:#94a3b8;margin:0 0 24px 0;">Topic: <strong style="color:#c4b5fd;" id="modal-topic"></strong></p>
     <form method="POST" action="/student/generate-quiz" id="quiz-gen-form">
       <input type="hidden" name="pdf_note_id" id="modal-pdf-id" />
       <div class="mb-4">
@@ -186,11 +186,12 @@
 </div>
 
 <!-- Loading overlay for quiz generation -->
-<div id="quiz-loading" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-90">
-  <div class="flex flex-col items-center gap-4">
-    <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-    <p class="text-gray-700 font-medium text-lg">Generating your quiz with AI...</p>
-    <p class="text-gray-400 text-sm">This may take up to 30 seconds</p>
+<div id="quiz-loading" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center" style="background:rgba(12,10,24,0.92);backdrop-filter:blur(12px);">
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+    <div style="width:56px;height:56px;border:3px solid rgba(139,92,246,0.2);border-top:3px solid #a78bfa;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <p style="color:#f1f5f9;font-weight:600;font-size:18px;margin:0;">Generating your quiz with AI...</p>
+    <p style="color:#64748b;font-size:14px;margin:0;">This may take up to 30 seconds</p>
   </div>
 </div>
 

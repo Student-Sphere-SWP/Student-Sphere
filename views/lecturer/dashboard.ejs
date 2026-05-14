@@ -2,17 +2,17 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <h1 class="text-2xl font-bold text-gray-900">My Modules</h1>
+<div style="max-width:1200px;margin:0 auto;">
+  <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0 0 6px 0;letter-spacing:-0.5px;">My Modules</h1>
 
   <% if (modules.length === 0) { %>
-    <div class="card text-center py-12">
+    <div class="card text-center py-12" style="margin-top:24px;">
       <p class="text-4xl mb-3">📚</p>
       <p class="text-gray-500">You have not been assigned to any modules yet.</p>
       <p class="text-sm text-gray-400 mt-1">Contact an administrator to get assigned.</p>
     </div>
   <% } else { %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style="margin-top:24px;">
       <% modules.forEach(m => { %>
       <a href="/lecturer/modules/<%= m.id %>" class="card hover:shadow-md transition-shadow group">
         <div class="flex items-start gap-3 mb-4">

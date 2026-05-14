@@ -2,43 +2,49 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <h1 class="text-2xl font-bold text-gray-900">Browse Modules</h1>
-  <p class="text-gray-500 text-sm -mt-4">Click a module to enroll, or visit a module you're already in.</p>
+<div style="max-width:1200px;margin:0 auto;">
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  <!-- Header -->
+  <div style="margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <div style="width:4px;height:28px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+      <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0;letter-spacing:-0.5px;">Browse Modules</h1>
+    </div>
+    <p style="color:#64748b;font-size:14px;margin:0 0 0 16px;">Click a module to enroll, or visit a module you're already in.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
     <% modules.forEach(m => { %>
-    <div class="card hover:shadow-md transition-shadow">
-      <div class="flex items-start gap-3 mb-3">
-        <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-sm"
-             style="background-color: <%= m.colour %>20; color: <%= m.colour %>">
+    <div style="position:relative;background:rgba(15,12,30,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:24px;overflow:hidden;">
+      <div style="position:absolute;inset:-1px;border-radius:20px;background:linear-gradient(135deg,<%= m.colour %>20,transparent 80%);opacity:0.5;z-index:-1;"></div>
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+        <div style="width:44px;height:44px;border-radius:12px;background:<%= m.colour %>30;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;color:<%= m.colour %>;">
           <%= m.module_code.substring(0,2) %>
         </div>
         <div>
-          <p class="font-semibold text-gray-800"><%= m.module_name %></p>
-          <p class="text-xs text-gray-400"><%= m.module_code %> · <%= m.student_count %> students</p>
+          <p style="font-size:15px;font-weight:700;color:#f8fafc;margin:0;"><%= m.module_name %></p>
+          <p style="font-size:12px;color:#64748b;margin:4px 0 0 0;font-family:monospace;"><%= m.module_code %> · <%= m.student_count %> students</p>
         </div>
       </div>
       <% if (m.description) { %>
-        <p class="text-xs text-gray-500 mb-3 line-clamp-2"><%= m.description %></p>
+        <p style="font-size:13px;color:#94a3b8;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"><%= m.description %></p>
       <% } %>
-
       <% if (m.enrolled) { %>
-        <div class="flex gap-2">
-          <a href="/student/modules/<%= m.id %>" class="btn-primary text-xs flex-1 justify-center">Open Module</a>
-          <form method="POST" action="/student/modules/<%= m.id %>/unenroll"
-                onsubmit="return confirm('Unenroll from this module?')">
-            <button type="submit" class="btn-secondary text-xs">Unenroll</button>
+        <div style="display:flex;gap:8px;">
+          <a href="/student/modules/<%= m.id %>" class="btn-primary" style="flex:1;justify-content:center;font-size:13px;padding:9px 0;">Open Module</a>
+          <form method="POST" action="/student/modules/<%= m.id %>/unenroll" onsubmit="return confirm('Unenroll from this module?')">
+            <button type="submit" class="btn-secondary" style="font-size:13px;padding:9px 16px;">Unenroll</button>
           </form>
         </div>
       <% } else { %>
         <form method="POST" action="/student/modules/<%= m.id %>/enroll">
-          <button type="submit" class="btn-secondary w-full justify-center text-xs">Enroll</button>
+          <button type="submit" class="btn-secondary" style="width:100%;justify-content:center;font-size:13px;padding:9px 0;">Enroll</button>
         </form>
       <% } %>
     </div>
     <% }) %>
   </div>
+
 </div>
 
 <%- include('../partials/footer') %>

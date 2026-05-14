@@ -2,22 +2,20 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="max-w-2xl mx-auto space-y-6">
+<div style="max-width:800px;margin:0 auto;">
 
-  <!-- Header -->
   <div>
-    <a href="/student/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Back to Dashboard</a>
+    <a href="/student/dashboard" style="color:#a78bfa;font-size:13px;font-weight:600;text-decoration:none;">← Back to Dashboard</a>
     <div class="flex items-center gap-3 mt-2">
       <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl">🧠</div>
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Adaptive Quiz</h1>
-        <p class="text-sm text-gray-500">AI generates targeted questions based on your weak areas</p>
+        <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0 0 6px 0;letter-spacing:-0.5px;">Adaptive Quiz</h1>
+        <p style="color:#64748b;font-size:14px;margin:0;">AI generates targeted questions based on your weak areas</p>
       </div>
     </div>
   </div>
 
-  <!-- How it works -->
-  <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3">
+  <div style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);border-radius:16px;padding:20px;display:flex;gap:12px;margin-top:24px;">
     <span class="text-indigo-400 text-xl flex-shrink-0 mt-0.5">💡</span>
     <div class="text-sm text-indigo-800 space-y-1">
       <p class="font-semibold">How Adaptive Quizzing Works</p>
@@ -26,8 +24,7 @@
   </div>
 
   <% if (!weakTopics.length) { %>
-  <!-- No weak topics -->
-  <div class="card text-center py-14">
+  <div class="card text-center py-14" style="margin-top:24px;">
     <p class="text-5xl mb-4">🎉</p>
     <h2 class="text-xl font-bold text-gray-800 mb-2">No Weak Topics Found</h2>
     <p class="text-gray-500 text-sm max-w-sm mx-auto">
@@ -38,10 +35,12 @@
   </div>
   <% } else { %>
 
-  <!-- Weak topics list -->
-  <div class="card">
-    <h2 class="text-base font-semibold text-gray-800 mb-1">Your Weak Topics</h2>
-    <p class="text-xs text-gray-400 mb-5">Showing topics where your average score is below 70%</p>
+  <div class="card" style="margin-top:24px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+      <div style="width:4px;height:24px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+      <h2 style="font-size:18px;font-weight:700;color:#f8fafc;margin:0;">Your Weak Topics</h2>
+    </div>
+    <p style="color:#64748b;font-size:13px;margin:0 0 20px 0;">Showing topics where your average score is below 70%</p>
 
     <div class="space-y-3 mb-6">
       <% weakTopics.forEach(t => { %>
@@ -60,7 +59,7 @@
             <span class="badge <%= badge %> flex-shrink-0"><%= label %></span>
           </div>
           <div class="flex items-center gap-2">
-            <div class="flex-1 bg-gray-100 rounded-full h-1.5">
+            <div class="flex-1 rounded-full h-1.5" style="background:rgba(255,255,255,0.1);">
               <div class="h-1.5 rounded-full weak-bar" data-pct="<%= pct %>" data-color="<%= barColor %>"></div>
             </div>
             <span class="text-xs text-gray-500 flex-shrink-0"><%= pct %>% avg</span>
@@ -88,7 +87,6 @@
 </div>
 
 <script>
-  // Apply bar widths and module dot colours
   document.querySelectorAll('.weak-bar').forEach(el => {
     el.style.width = el.dataset.pct + '%';
     el.style.backgroundColor = el.dataset.color;
@@ -97,7 +95,6 @@
     el.style.backgroundColor = el.dataset.colour;
   });
 
-  // Enable button when a radio is selected
   const radios = document.querySelectorAll('input[name="selected_weak_topic"]');
   const btn    = document.getElementById('generateBtn');
   const input  = document.getElementById('weakTopicInput');

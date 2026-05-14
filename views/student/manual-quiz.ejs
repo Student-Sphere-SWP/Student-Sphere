@@ -2,14 +2,14 @@
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="max-w-3xl mx-auto space-y-6">
+<div style="max-width:900px;margin:0 auto;">
   <div>
-    <a href="/student/modules/<%= quiz.module_id %>" class="text-gray-400 hover:text-gray-600 text-sm">← Back to Module</a>
-    <h1 class="text-2xl font-bold text-gray-900 mt-1">Practice Quiz</h1>
-    <p class="text-sm text-gray-500">Topic: <strong><%= quiz.topic_name %></strong> · <%= questions.length %> questions</p>
+    <a href="/student/modules/<%= quiz.module_id %>" style="color:#a78bfa;font-size:13px;font-weight:600;text-decoration:none;">← Back to Module</a>
+    <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:8px 0 6px 0;letter-spacing:-0.5px;">Practice Quiz</h1>
+    <p style="color:#64748b;font-size:14px;margin:0;">Topic: <strong style="color:#94a3b8;"><%= quiz.topic_name %></strong> · <%= questions.length %> questions</p>
   </div>
 
-  <form method="POST" action="/student/manual-quiz/<%= quiz.id %>/submit">
+  <form method="POST" action="/student/manual-quiz/<%= quiz.id %>/submit" style="margin-top:24px;">
     <div class="space-y-4">
       <% questions.forEach((q, idx) => { %>
       <div class="card">

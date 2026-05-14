@@ -1,81 +1,219 @@
-<%- include('../partials/head', { title }) %>
+﻿<%- include('../partials/head', { title }) %>
 <%- include('../partials/navbar', { user }) %>
 <%- include('../partials/flash') %>
 
-<div class="space-y-6">
-  <div class="flex items-center gap-3">
-    <a href="/lecturer/modules/<%= module.id %>" class="text-gray-400 hover:text-gray-600 text-sm">← Module</a>
-    <h1 class="text-2xl font-bold text-gray-900">Analytics — <%= module.module_name %></h1>
+<div class="space-y-6" style="max-width:1200px;margin:0 auto;">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <a href="/lecturer/modules/<%= module.id %>" style="color:#a78bfa;font-size:13px;font-weight:600;text-decoration:none;">← Module</a>
+      <h1 style="font-size:26px;font-weight:800;color:#f8fafc;margin:0;letter-spacing:-0.5px;">Analytics — <%= module.module_name %></h1>
+    </div>
+    <a href="/lecturer/analytics" style="color:#64748b;font-size:13px;font-weight:600;text-decoration:none;">← All Modules</a>
+  </div>
+
+  <!-- Summary stat cards -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="card text-center" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#818cf8,#6366f1);"></div>
+      <p style="font-size:28px;font-weight:800;color:#f8fafc;margin:8px 0 4px;"><%= summary.totalStudents %></p>
+      <p style="font-size:11px;color:#64748b;margin:0;">Enrolled</p>
+    </div>
+    <div class="card text-center" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c4b5fd,#7c3aed);"></div>
+      <p style="font-size:28px;font-weight:800;color:#a78bfa;margin:8px 0 4px;"><%= summary.activeStudents %></p>
+      <p style="font-size:11px;color:#64748b;margin:0;">Active (quizzed)</p>
+    </div>
+    <div class="card text-center" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#93c5fd,#2563eb);"></div>
+      <p style="font-size:28px;font-weight:800;color:#93c5fd;margin:8px 0 4px;"><%= summary.totalAttempts %></p>
+      <p style="font-size:11px;color:#64748b;margin:0;">Total Attempts</p>
+    </div>
+    <div class="card text-center" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#34d399,#10b981);"></div>
+      <p style="font-size:28px;font-weight:800;color:<%= summary.avgScore >= 70 ? '#22c55e' : summary.avgScore >= 50 ? '#eab308' : summary.avgScore ? '#ef4444' : '#64748b' %>;margin:8px 0 4px;">
+        <%= summary.avgScore ? summary.avgScore + '%' : '—' %>
+      </p>
+      <p style="font-size:11px;color:#64748b;margin:0;">Avg Score</p>
+    </div>
+    <div class="card text-center" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#fcd34d,#f59e0b);"></div>
+      <p style="font-size:28px;font-weight:800;color:#fcd34d;margin:8px 0 4px;"><%= summary.topScore ? summary.topScore + '%' : '—' %></p>
+      <p style="font-size:11px;color:#64748b;margin:0;">Top Score</p>
+    </div>
+    <div class="card text-center" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f9a8d4,#ec4899);"></div>
+      <p style="font-size:28px;font-weight:800;color:<%= summary.passRate >= 70 ? '#22c55e' : summary.passRate >= 50 ? '#eab308' : summary.passRate !== null ? '#ef4444' : '#64748b' %>;margin:8px 0 4px;">
+        <%= summary.passRate !== null ? summary.passRate + '%' : '—' %>
+      </p>
+      <p style="font-size:11px;color:#64748b;margin:0;">Pass Rate (≥70%)</p>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Topic struggle bar chart -->
+
+    <!-- Avg score by topic chart -->
     <div class="card">
-      <h2 class="text-base font-semibold text-gray-700 mb-4">Average Score by Topic</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:4px;height:22px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+        <h2 style="font-size:15px;font-weight:700;color:#f8fafc;margin:0;">Avg Score by Topic</h2>
+      </div>
       <% if (!topicStats.length) { %>
-        <p class="text-gray-400 text-sm text-center py-8">No quiz data yet.</p>
+        <div style="text-align:center;padding:40px 0;"><p style="color:#94a3b8;font-size:14px;">No quiz data yet.</p></div>
       <% } else { %>
-        <canvas id="topicsChart" height="250"></canvas>
+        <canvas id="topicsChart" height="220"></canvas>
       <% } %>
     </div>
 
-    <!-- Topics table -->
+    <!-- Score distribution doughnut -->
     <div class="card">
-      <h2 class="text-base font-semibold text-gray-700 mb-4">Topic Performance</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:4px;height:22px;background:linear-gradient(180deg,#67e8f9,#0891b2);border-radius:2px;"></div>
+        <h2 style="font-size:15px;font-weight:700;color:#f8fafc;margin:0;">Score Distribution</h2>
+      </div>
+      <% const bands = scoreBands; const totalBands = Number(bands.mastered)+Number(bands.proficient)+Number(bands.getting_there)+Number(bands.needs_work); %>
+      <% if (!totalBands) { %>
+        <div style="text-align:center;padding:40px 0;"><p style="color:#94a3b8;font-size:14px;">No quiz data yet.</p></div>
+      <% } else { %>
+        <div style="display:flex;align-items:center;gap:24px;">
+          <canvas id="bandChart" style="max-width:180px;max-height:180px;flex-shrink:0;"></canvas>
+          <div style="flex:1;">
+            <% [
+              { label:'Mastered (≥85%)',    key:'mastered',      color:'#22c55e' },
+              { label:'Proficient (70–84%)', key:'proficient',    color:'#34d399' },
+              { label:'Getting There (50–69%)', key:'getting_there', color:'#eab308' },
+              { label:'Needs Work (<50%)',   key:'needs_work',    color:'#ef4444' }
+            ].forEach(b => { %>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:10px;height:10px;border-radius:2px;background:<%= b.color %>;flex-shrink:0;"></div>
+                <span style="font-size:12px;color:#94a3b8;"><%= b.label %></span>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:#f8fafc;"><%= bands[b.key] %></span>
+            </div>
+            <% }) %>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);">
+              <span style="font-size:12px;color:#64748b;">Total attempts: <strong style="color:#f8fafc;"><%= totalBands %></strong></span>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <!-- Topic breakdown table + Top students side by side -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Topic detail table (spans 2 cols) -->
+    <div class="card lg:col-span-2">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:4px;height:22px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:2px;"></div>
+        <h2 style="font-size:15px;font-weight:700;color:#f8fafc;margin:0;">Topic Breakdown</h2>
+      </div>
       <% if (!topicStats.length) { %>
-        <p class="text-gray-400 text-sm text-center py-8">No data yet.</p>
+        <p style="color:#94a3b8;font-size:14px;text-align:center;padding:32px 0;">No data yet.</p>
+      <% } else { %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+              <th class="text-left py-2 px-2 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Topic</th>
+              <th class="text-center py-2 px-2 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Attempts</th>
+              <th class="text-center py-2 px-2 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Avg</th>
+              <th class="text-center py-2 px-2 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Min</th>
+              <th class="text-center py-2 px-2 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Max</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% topicStats.forEach(t => { %>
+            <% const a = parseFloat(t.avg_score); %>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+              <td class="py-3 px-2 font-medium" style="color:#f1f5f9;font-size:13px;"><%= t.topic_name %></td>
+              <td class="py-3 px-2 text-center" style="color:#94a3b8;"><%= t.attempt_count %></td>
+              <td class="py-3 px-2 text-center">
+                <span style="font-weight:700;font-size:13px;color:<%= a >= 70 ? '#22c55e' : a >= 50 ? '#eab308' : '#ef4444' %>;">
+                  <%= t.avg_score %>%
+                </span>
+              </td>
+              <td class="py-3 px-2 text-center" style="color:#ef4444;font-size:13px;"><%= t.min_score %>%</td>
+              <td class="py-3 px-2 text-center" style="color:#22c55e;font-size:13px;"><%= t.max_score %>%</td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Top students -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:4px;height:22px;background:linear-gradient(180deg,#fcd34d,#f59e0b);border-radius:2px;"></div>
+        <h2 style="font-size:15px;font-weight:700;color:#f8fafc;margin:0;">Top Students</h2>
+      </div>
+      <% if (!topStudents.length) { %>
+        <p style="color:#94a3b8;font-size:14px;text-align:center;padding:32px 0;">Need ≥2 attempts to rank.</p>
       <% } else { %>
       <div class="space-y-3">
-        <% topicStats.forEach(t => { %>
-        <div class="p-3 rounded-lg bg-gray-50">
-          <div class="flex items-center justify-between mb-1">
-            <p class="text-sm font-medium text-gray-700 truncate max-w-[65%]"><%= t.topic_name %></p>
-            <span class="text-sm font-bold <%= parseFloat(t.avg_score) >= 70 ? 'text-green-600' : parseFloat(t.avg_score) >= 50 ? 'text-yellow-600' : 'text-red-600' %>">
-              <%= t.avg_score %>%
-            </span>
+        <% topStudents.forEach((s, i) => { %>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(20,16,38,0.5);border:1px solid rgba(255,255,255,0.07);border-radius:12px;">
+          <span style="font-size:16px;font-weight:800;color:<%= i===0 ? '#fcd34d' : i===1 ? '#94a3b8' : i===2 ? '#fb923c' : '#475569' %>;min-width:20px;text-align:center;">#<%= i+1 %></span>
+          <div style="flex:1;min-width:0;">
+            <p style="font-size:13px;font-weight:600;color:#f1f5f9;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= s.name %></p>
+            <p style="font-size:11px;color:#64748b;margin:2px 0 0 0;"><%= s.attempts %> attempt<%= s.attempts != 1 ? 's' : '' %></p>
           </div>
-          <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div class="h-full rounded-full <%= parseFloat(t.avg_score) >= 70 ? 'bg-green-500' : parseFloat(t.avg_score) >= 50 ? 'bg-yellow-500' : 'bg-red-500' %>"
-                 style="width: <%= t.avg_score %>%"></div>
-          </div>
-          <p class="text-xs text-gray-400 mt-1"><%= t.attempt_count %> attempts</p>
+          <span style="font-size:14px;font-weight:800;color:<%= parseFloat(s.avg_score) >= 70 ? '#22c55e' : '#eab308' %>;"><%= s.avg_score %>%</span>
         </div>
         <% }) %>
       </div>
       <% } %>
     </div>
 
-    <!-- Recent quiz scores -->
-    <% if (recentScores.length) { %>
-    <div class="card lg:col-span-2">
-      <h2 class="text-base font-semibold text-gray-700 mb-4">Recent Student Scores</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="text-left px-4 py-2 text-xs text-gray-500">Student</th>
-              <th class="text-left px-4 py-2 text-xs text-gray-500">Topic</th>
-              <th class="text-left px-4 py-2 text-xs text-gray-500">Score</th>
-              <th class="text-left px-4 py-2 text-xs text-gray-500">Date</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            <% recentScores.forEach(s => { %>
-            <tr class="hover:bg-gray-50">
-              <td class="px-4 py-2 text-gray-700"><%= s.student_name %></td>
-              <td class="px-4 py-2 text-gray-500"><%= s.topic_name %></td>
-              <td class="px-4 py-2 font-semibold <%= parseFloat(s.score_percentage) >= 70 ? 'text-green-600' : parseFloat(s.score_percentage) >= 50 ? 'text-yellow-600' : 'text-red-600' %>">
-                <%= s.score_percentage %>%
-              </td>
-              <td class="px-4 py-2 text-gray-400"><%= new Date(s.attempted_at).toLocaleDateString() %></td>
-            </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <% } %>
   </div>
+
+  <!-- Recent scores -->
+  <% if (recentScores.length) { %>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:4px;height:22px;background:linear-gradient(180deg,#93c5fd,#2563eb);border-radius:2px;"></div>
+      <h2 style="font-size:15px;font-weight:700;color:#f8fafc;margin:0;">Recent Attempts</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+            <th class="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Student</th>
+            <th class="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Topic</th>
+            <th class="text-center py-2 px-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Score</th>
+            <th class="text-center py-2 px-3 text-xs font-semibold uppercase tracking-wider" style="color:#64748b;">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentScores.forEach(s => { %>
+          <% const sc = parseFloat(s.score_percentage); %>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td class="py-2 px-3 font-medium" style="color:#f1f5f9;"><%= s.student_name %></td>
+            <td class="py-2 px-3" style="color:#94a3b8;font-size:12px;"><%= s.topic_name %></td>
+            <td class="py-2 px-3 text-center">
+              <span style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px;
+                background:<%= sc >= 70 ? 'rgba(34,197,94,0.15)' : sc >= 50 ? 'rgba(234,179,8,0.15)' : 'rgba(239,68,68,0.15)' %>;
+                color:<%= sc >= 70 ? '#22c55e' : sc >= 50 ? '#eab308' : '#ef4444' %>;">
+                <%= sc.toFixed(0) %>%
+              </span>
+            </td>
+            <td class="py-2 px-3 text-center" style="color:#64748b;font-size:12px;">
+              <%= new Date(s.attempted_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}) %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <% } %>
+
 </div>
 
 <% if (topicStats.length) { %>
@@ -87,17 +225,47 @@ new Chart(document.getElementById('topicsChart'), {
     labels: topics.map(t => t.topic_name),
     datasets: [{
       label: 'Avg Score %',
-      data: topics.map(t => t.avg_score),
+      data: topics.map(t => parseFloat(t.avg_score)),
       backgroundColor: topics.map(t =>
-        parseFloat(t.avg_score) >= 70 ? '#10b981' :
-        parseFloat(t.avg_score) >= 50 ? '#f59e0b' : '#ef4444'),
+        parseFloat(t.avg_score) >= 70 ? 'rgba(34,197,94,0.75)' :
+        parseFloat(t.avg_score) >= 50 ? 'rgba(234,179,8,0.75)' : 'rgba(239,68,68,0.75)'),
       borderRadius: 6
     }]
   },
   options: {
     indexAxis: 'y',
     plugins: { legend: { display: false } },
-    scales: { x: { beginAtZero: true, max: 100 } }
+    scales: {
+      x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+      y: { ticks: { font: { size: 11 } } }
+    }
+  }
+});
+</script>
+<% } %>
+
+<% const totalBands2 = Number(scoreBands.mastered)+Number(scoreBands.proficient)+Number(scoreBands.getting_there)+Number(scoreBands.needs_work); %>
+<% if (totalBands2 > 0) { %>
+<script>
+new Chart(document.getElementById('bandChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Mastered', 'Proficient', 'Getting There', 'Needs Work'],
+    datasets: [{
+      data: [<%= scoreBands.mastered %>, <%= scoreBands.proficient %>, <%= scoreBands.getting_there %>, <%= scoreBands.needs_work %>],
+      backgroundColor: ['#22c55e','#34d399','#eab308','#ef4444'],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    cutout: '65%',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} attempts` }
+      }
+    }
   }
 });
 </script>
