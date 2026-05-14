@@ -1,80 +1,176 @@
 <%- include('../partials/head', { title }) %>
 <%- include('../partials/navbar', { user }) %>
-<%- include('../partials/flash') %>
 
-<div class="max-w-3xl mx-auto space-y-6">
-  <div>
-    <a href="/mentor/dashboard" class="text-gray-400 hover:text-gray-600 text-sm">← Dashboard</a>
-    <h1 class="text-2xl font-bold text-gray-900 mt-1">My Notes</h1>
-    <p class="text-sm text-gray-500">Upload supplementary notes visible to students on your tutor profile.</p>
-  </div>
-
-  <!-- Upload form -->
-  <div class="card">
-    <h2 class="text-base font-semibold text-gray-800 mb-4">Upload a Note</h2>
-    <form method="POST" action="/mentor/upload-note" enctype="multipart/form-data" class="space-y-4">
-      <div>
-        <label class="form-label">Module</label>
-        <select name="module_id" class="form-input" required>
-          <option value="">Select a module…</option>
-          <% modules.forEach(m => { %>
-          <option value="<%= m.id %>"><%= m.module_name %> (<%= m.module_code %>)</option>
-          <% }) %>
-        </select>
-      </div>
-      <div>
-        <label class="form-label">Topic Name</label>
-        <input type="text" name="topic_name" class="form-input" placeholder="e.g. Week 3 Summary" required maxlength="255" />
-      </div>
-      <div>
-        <label class="form-label">PDF File</label>
-        <input type="file" name="pdf" accept="application/pdf" class="form-input" required />
-        <p class="text-xs text-gray-400 mt-1">PDF only, max 20 MB</p>
-      </div>
-      <button type="submit" class="btn-primary">Upload Note</button>
-    </form>
-  </div>
-
-  <!-- My notes list -->
-  <div class="card">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-base font-semibold text-gray-800">Uploaded Notes</h2>
-      <!-- Module filter -->
-      <form method="GET" action="/mentor/my-notes" class="flex gap-2 items-center">
-        <select name="module_id" onchange="this.form.submit()" class="form-input text-xs py-1.5">
-          <option value="">All Modules</option>
-          <% modules.forEach(m => { %>
-          <option value="<%= m.id %>" <%= filterModuleId == m.id ? 'selected' : '' %>><%= m.module_name %></option>
-          <% }) %>
-        </select>
-      </form>
+<div style="background: linear-gradient(160deg, rgba(10,8,25,0.65) 0%, rgba(18,12,32,0.65) 30%, rgba(10,20,32,0.65) 70%, rgba(8,10,20,0.65) 100%), url('/images/login_bg.jpg'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat; min-height: 100vh; padding: 32px 20px 60px; font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased;">
+  
+  <div style="max-width: 1200px; margin: 0 auto;">
+    
+    <!-- Header -->
+    <div style="margin-bottom: 28px;">
+      <a href="/mentor/dashboard" style="color: #a78bfa; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px;">← Dashboard</a>
+      <h1 style="font-size: 36px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: -1px; line-height: 1.1;">Module Analytics</h1>
+      <p style="font-size: 18px; color: #cbd5e1; margin: 6px 0 0 0; font-weight: 600;"><%= moduleName %></p>
     </div>
 
-    <% if (!notes.length) { %>
-      <p class="text-gray-400 text-sm text-center py-8">No notes uploaded yet.</p>
-    <% } else { %>
-    <div class="space-y-2">
-      <% notes.forEach(n => { %>
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
-        <div class="flex items-center gap-3 min-w-0">
-          <span class="text-red-500 text-xl flex-shrink-0">📄</span>
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-gray-700 truncate"><%= n.topic_name %></p>
-            <p class="text-xs text-gray-400"><%= n.module_name %> · <%= n.file_name %></p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <a href="<%= n.file_url %>" target="_blank" download class="text-xs text-blue-600 hover:underline">⬇ Download</a>
-          <form method="POST" action="/mentor/my-notes/<%= n.id %>?_method=DELETE"
-                onsubmit="return confirm('Delete this note?')">
-            <button type="submit" class="text-xs text-red-400 hover:text-red-600">Delete</button>
-          </form>
-        </div>
+    <!-- Summary cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 28px;">
+      
+      <div style="background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; text-align: center;">
+        <p style="font-size: 48px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1; letter-spacing: -2px;"><%= stats.totalStudents %></p>
+        <p style="font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin: 12px 0 0 0;">Students</p>
       </div>
-      <% }) %>
+
+      <div style="background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #8b5cf6, #a78bfa);"></div>
+        <p style="font-size: 48px; font-weight: 800; color: #c4b5fd; margin: 0; line-height: 1; letter-spacing: -2px;"><%= stats.totalAttempts %></p>
+        <p style="font-size: 12px; font-weight: 700; color: #c4b5fd; text-transform: uppercase; letter-spacing: 1.5px; margin: 12px 0 0 0;">Quiz Attempts</p>
+      </div>
+
+      <div style="background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+        <p style="font-size: 48px; font-weight: 800; color: #6ee7b7; margin: 0; line-height: 1; letter-spacing: -2px;"><%= stats.avgScore ? parseFloat(stats.avgScore).toFixed(1) : '—' %>%</p>
+        <p style="font-size: 12px; font-weight: 700; color: #6ee7b7; text-transform: uppercase; letter-spacing: 1.5px; margin: 12px 0 0 0;">Avg Score</p>
+      </div>
+
+      <div style="background: rgba(15,12,30,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+        <p style="font-size: 48px; font-weight: 800; color: #fcd34d; margin: 0; line-height: 1; letter-spacing: -2px;"><%= stats.avgRating ? parseFloat(stats.avgRating).toFixed(1) : '—' %></p>
+        <p style="font-size: 12px; font-weight: 700; color: #fcd34d; text-transform: uppercase; letter-spacing: 1.5px; margin: 12px 0 0 0;">Avg Rating ★</p>
+      </div>
+    </div>
+
+    <!-- Score breakdown chart -->
+    <% if (topicStats.length) { %>
+    <div style="background: rgba(15,12,30,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 36px; margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
+        <div style="width: 5px; height: 32px; background: linear-gradient(180deg, #c4b5fd, #7c3aed); border-radius: 3px;"></div>
+        <h2 style="font-size: 22px; font-weight: 700; color: #ffffff; margin: 0; letter-spacing: -0.5px;">Avg Score by Topic</h2>
+      </div>
+      <div style="background: rgba(20,16,38,0.5); border-radius: 16px; padding: 24px;">
+        <canvas id="topicChart" height="90" style="width: 100%;"></canvas>
+      </div>
     </div>
     <% } %>
+
+    <!-- Per-topic progress table -->
+    <div style="background: rgba(15,12,30,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 36px;">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 28px;">
+        <div style="width: 5px; height: 32px; background: linear-gradient(180deg, #93c5fd, #2563eb); border-radius: 3px;"></div>
+        <h2 style="font-size: 22px; font-weight: 700; color: #ffffff; margin: 0; letter-spacing: -0.5px;">Topic Breakdown</h2>
+      </div>
+
+      <% if (!topicStats.length) { %>
+        <div style="text-align: center; padding: 60px 20px;">
+          <div style="background: rgba(139,92,246,0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px;">📊</div>
+          <p style="color: #cbd5e1; font-size: 17px; font-weight: 600; margin: 0;">No quiz attempts recorded yet</p>
+          <p style="color: #94a3b8; font-size: 14px; margin: 8px 0 0 0;">Data will appear once students start taking quizzes</p>
+        </div>
+      <% } else { %>
+        <div style="overflow-x: auto; border-radius: 16px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+              <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                <th style="text-align: left; padding: 14px 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Topic</th>
+                <th style="text-align: center; padding: 14px 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Attempts</th>
+                <th style="text-align: center; padding: 14px 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Avg Score</th>
+                <th style="text-align: center; padding: 14px 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Top Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% topicStats.forEach((t, index) => { %>
+              <% const avg = parseFloat(t.avg_score) || 0; %>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); background: <%= index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' %>;">
+                <td style="padding: 16px; font-weight: 600; color: #f1f5f9; font-size: 14px;"><%= t.topic_name %></td>
+                <td style="padding: 16px; text-align: center; color: #cbd5e1; font-weight: 500; font-size: 14px;"><%= t.attempts %></td>
+                <td style="padding: 16px; text-align: center;">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <div style="width: 100px; background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden;">
+                      <div style="height: 6px; border-radius: 10px; width: <%= avg %>%; 
+                        <%= avg >= 70 ? 'background: linear-gradient(90deg, #10b981, #34d399);' : avg >= 50 ? 'background: linear-gradient(90deg, #f59e0b, #fbbf24);' : 'background: linear-gradient(90deg, #ef4444, #f87171);' %>
+                        box-shadow: 0 0 10px <%= avg >= 70 ? 'rgba(16,185,129,0.5)' : avg >= 50 ? 'rgba(245,158,11,0.5)' : 'rgba(239,68,68,0.5)' %>;">
+                      </div>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 700; color: #f8fafc; min-width: 36px;"><%= avg.toFixed(0) %>%</span>
+                  </div>
+                </td>
+                <td style="padding: 16px; text-align: center; font-weight: 600; color: #6ee7b7; font-size: 14px;"><%= parseFloat(t.top_score).toFixed(0) %>%</td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 36px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.08);">
+      <p style="font-size: 12px; color: #94a3b8; margin: 0; letter-spacing: 0.5px; font-weight: 500;">Module Analytics · <%= new Date().getFullYear() %></p>
+    </div>
+
   </div>
 </div>
+
+<% if (topicStats.length) { %>
+<script>
+  const ctx = document.getElementById('topicChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: <%- JSON.stringify(topicStats.map(t => t.topic_name)) %>,
+      datasets: [{
+        label: 'Avg Score %',
+        data: <%- JSON.stringify(topicStats.map(t => parseFloat(t.avg_score).toFixed(1))) %>,
+        backgroundColor: <%- JSON.stringify(topicStats.map(t => parseFloat(t.avg_score) >= 70 ? 'rgba(52,211,153,0.8)' : parseFloat(t.avg_score) >= 50 ? 'rgba(251,191,36,0.8)' : 'rgba(248,113,113,0.8)')) %>,
+        borderColor: <%- JSON.stringify(topicStats.map(t => parseFloat(t.avg_score) >= 70 ? 'rgba(52,211,153,1)' : parseFloat(t.avg_score) >= 50 ? 'rgba(251,191,36,1)' : 'rgba(248,113,113,1)')) %>,
+        borderWidth: 1,
+        borderRadius: 6,
+        barThickness: 20
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          ticks: {
+            callback: v => v + '%',
+            color: '#94a3b8',
+            font: { weight: '600', size: 11 }
+          },
+          grid: {
+            color: 'rgba(255,255,255,0.06)'
+          }
+        },
+        y: {
+          ticks: {
+            color: '#cbd5e1',
+            font: { weight: '600', size: 12 }
+          },
+          grid: {
+            display: false
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,12,30,0.95)',
+          titleColor: '#f8fafc',
+          bodyColor: '#cbd5e1',
+          borderColor: 'rgba(255,255,255,0.12)',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
+          titleFont: { weight: '700' },
+          bodyFont: { weight: '500' }
+        }
+      }
+    }
+  });
+</script>
+<% } %>
 
 <%- include('../partials/footer') %>

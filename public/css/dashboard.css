@@ -1,0 +1,37 @@
+/* dashboard.css */
+
+body {
+  font-family: system-ui, sans-serif;
+  background: linear-gradient(rgba(26,32,44,0.85), rgba(26,32,44,0.85)),
+              url('/images/students_bg.jpg') center/cover no-repeat;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Card styling */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
