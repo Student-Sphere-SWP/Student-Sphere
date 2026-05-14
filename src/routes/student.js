@@ -1034,5 +1034,62 @@ router.get('/practice', studentOnly, async (req, res) => {
   }
 });
 
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+router.get('/leaderboard', studentOnly, async (req, res) => {
+  try {
+    // Top 5 students by combined average across both quiz types
+    // Weight each attempt equally; combine ai + manual attempts, average per student
+    const { rows: top } = await pool.query(
+      `SELECT u.id, u.name, u.profile_picture,
+         ROUND(AVG(score_percentage), 1) AS avg_score,
+         COUNT(*)                        AS total_attempts
+       FROM (
+         SELECT student_id, score_percentage FROM ai_quiz_attempt
+         UNION ALL
+         SELECT student_id, score_percentage FROM manual_quiz_attempt
+       ) all_attempts
+       JOIN "user" u ON u.id = all_attempts.student_id
+       WHERE score_percentage IS NOT NULL
+       GROUP BY u.id, u.name, u.profile_picture
+       HAVING COUNT(*) >= 1
+       ORDER BY avg_score DESC, total_attempts DESC
+       LIMIT 5`
+    );
+
+    // Also fetch the current student's own rank for context
+    const { rows: rankRows } = await pool.query(
+      `SELECT rank, avg_score, total_attempts FROM (
+         SELECT u.id,
+           RANK() OVER (ORDER BY AVG(score_percentage) DESC, COUNT(*) DESC) AS rank,
+           ROUND(AVG(score_percentage), 1) AS avg_score,
+           COUNT(*) AS total_attempts
+         FROM (
+           SELECT student_id, score_percentage FROM ai_quiz_attempt
+           UNION ALL
+           SELECT student_id, score_percentage FROM manual_quiz_attempt
+         ) all_attempts
+         JOIN "user" u ON u.id = all_attempts.student_id
+         WHERE score_percentage IS NOT NULL
+         GROUP BY u.id
+       ) ranked
+       WHERE id = $1`,
+      [req.user.id]
+    );
+
+    const myRank = rankRows[0] || null;
+
+    res.render('student/leaderboard', {
+      title: 'Top Achievers',
+      user: req.user,
+      top,
+      myRank
+    });
+  } catch (err) {
+    console.error(err);
+    req.session.error = 'Failed to load leaderboard.';
+    res.redirect('/student/dashboard');
+  }
+});
+
 module.exports = router;
 

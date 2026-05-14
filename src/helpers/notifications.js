@@ -59,14 +59,14 @@ async function unreadCount(userId) {
 async function notifyEnrolledStudents(moduleId, type, title, body, link, dedupKeyFn = null) {
   try {
     const { rows: students } = await pool.query(
-      `SELECT user_id FROM student_enrollment WHERE module_id = $1`,
+      `SELECT student_id FROM student_enrollment WHERE module_id = $1`,
       [moduleId]
     );
     await Promise.all(
       students.map(s =>
         createNotification(
-          s.user_id, type, title, body, link,
-          dedupKeyFn ? dedupKeyFn(s.user_id) : null
+          s.student_id, type, title, body, link,
+          dedupKeyFn ? dedupKeyFn(s.student_id) : null
         )
       )
     );
